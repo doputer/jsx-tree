@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "license": "MIT",
   "main": "index.ts",
+  "prettier": "./configs/prettier/index.js",
   "devDependencies": {
     "@types/node": "^22.14.1",
     "@typescript-eslint/eslint-plugin": "^8.31.0",
