@@ -1,0 +1,21 @@
+{
+  "name": "jsx-tree",
+  "version": "0.0.1",
+  "license": "MIT",
+  "main": "index.ts",
+  "prettier": "./configs/prettier/index.js",
+  "devDependencies": {
+    "@types/node": "^22.14.1",
+    "@typescript-eslint/eslint-plugin": "^8.31.0",
+    "@typescript-eslint/parser": "^8.31.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^10.1.2",
+    "eslint-import-resolver-typescript": "^4.3.4",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-prettier": "^5.2.6",
+    "prettier": "^3.5.3",
+    "prettier-plugin-packagejson": "^2.5.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}
