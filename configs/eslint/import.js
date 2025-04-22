@@ -1,3 +1,7 @@
+const { resolve } = require('node:path');
+
+const project = resolve(process.cwd(), 'tsconfig.json');
+
 module.exports = {
   plugins: ['import'],
   rules: {
@@ -47,6 +51,9 @@ module.exports = {
   },
   settings: {
     'import/resolver': {
+      typescript: {
+        project,
+      },
       node: {
         extensions: ['.js', '.jsx', '.ts', '.tsx'],
       },
