@@ -1,0 +1,10 @@
+{
+  "name": "jsx-tree",
+  "version": "0.0.1",
+  "license": "MIT",
+  "main": "index.ts",
+  "devDependencies": {
+    "prettier": "^3.5.3",
+    "prettier-plugin-packagejson": "^2.5.10"
+  }
+}
