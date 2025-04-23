@@ -1,6 +1,9 @@
+import fs from 'node:fs';
+
 import { ParseResult } from '@babel/parser';
 import traverse, { Node } from '@babel/traverse';
 import * as type from '@babel/types';
+import { CachedInputFileSystem, ResolverFactory } from 'enhanced-resolve';
 
 export const getUsedComponents = (node: Node): string[] => {
   const components = new Set<string>();
@@ -65,3 +68,9 @@ export const getDefinedComponents = (ast: ParseResult<type.File>) => {
 
   return definitions;
 };
+
+const resolver = ResolverFactory.createResolver({
+  extensions: ['.jsx'],
+  fileSystem: new CachedInputFileSystem(fs, 4000),
+  useSyncFileSystemCalls: true,
+});
