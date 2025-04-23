@@ -1,11 +1,11 @@
-import { ParseResult } from '@babel/parser';
 import traverse, { Node } from '@babel/traverse';
 import * as type from '@babel/types';
 
+import type { AST, Component, Definition, Path } from '@/types';
 import { resolvePath } from '@/utils/file';
 
-export const getUsedComponents = (node: Node): string[] => {
-  const components = new Set<string>();
+const getUsedComponents = (node: Node) => {
+  const components = new Set<Component>();
 
   traverse(type.file(type.program([])), {
     Program: {
@@ -28,7 +28,7 @@ export const getUsedComponents = (node: Node): string[] => {
   return [...components];
 };
 
-const getJSXMemberComponent = (node: type.JSXMemberExpression): string => {
+const getJSXMemberComponent = (node: type.JSXMemberExpression): Component => {
   const object = node.object;
   const property = node.property;
 
@@ -37,8 +37,8 @@ const getJSXMemberComponent = (node: type.JSXMemberExpression): string => {
   return `${component}.${property.name}`;
 };
 
-export const getDefinedComponents = (ast: ParseResult<type.File>) => {
-  const definitions: { name: string; components: string[] }[] = [];
+export const getDefinedComponents = (ast: AST) => {
+  const definitions: Definition[] = [];
 
   traverse(ast, {
     FunctionDeclaration({ node }) {
@@ -68,8 +68,8 @@ export const getDefinedComponents = (ast: ParseResult<type.File>) => {
   return definitions;
 };
 
-export const getImportMap = (ast: ParseResult<type.File>, currentPath: string) => {
-  const map = new Map<string, string>();
+export const getImportMap = (ast: AST, currentPath: Path) => {
+  const map = new Map<Component, Path>();
 
   traverse(ast, {
     ImportDeclaration({ node }) {
