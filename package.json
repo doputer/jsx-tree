@@ -1,8 +1,12 @@
 {
   "name": "jsx-tree",
   "version": "0.0.1",
+  "description": "Analyze JSX files as a tree structure",
   "license": "MIT",
   "main": "index.ts",
+  "bin": {
+    "jsx-tree": "bin/cli.js"
+  },
   "scripts": {
     "build": "tsc && tsc-alias",
     "dev": "npx ts-node -r tsconfig-paths/register src/index.ts"
