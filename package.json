@@ -4,6 +4,15 @@
   "license": "MIT",
   "main": "index.ts",
   "prettier": "./configs/prettier/index.js",
+  "scripts": {
+    "dev": "npx ts-node -r tsconfig-paths/register src/index.ts"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.27.0",
+    "@babel/traverse": "^7.27.0",
+    "@types/babel__traverse": "^7.20.7",
+    "enhanced-resolve": "^5.18.1"
+  },
   "devDependencies": {
     "@types/node": "^22.14.1",
     "@typescript-eslint/eslint-plugin": "^8.31.0",
@@ -16,6 +25,7 @@
     "prettier": "^3.5.3",
     "prettier-plugin-packagejson": "^2.5.10",
     "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.8.3"
   }
 }
