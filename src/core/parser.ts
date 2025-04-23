@@ -1,9 +1,8 @@
-import fs from 'node:fs';
-
 import { ParseResult } from '@babel/parser';
 import traverse, { Node } from '@babel/traverse';
 import * as type from '@babel/types';
-import { CachedInputFileSystem, ResolverFactory } from 'enhanced-resolve';
+
+import { resolvePath } from '@/utils/file';
 
 export const getUsedComponents = (node: Node): string[] => {
   const components = new Set<string>();
@@ -69,8 +68,23 @@ export const getDefinedComponents = (ast: ParseResult<type.File>) => {
   return definitions;
 };
 
-const resolver = ResolverFactory.createResolver({
-  extensions: ['.jsx'],
-  fileSystem: new CachedInputFileSystem(fs, 4000),
-  useSyncFileSystemCalls: true,
-});
+export const getImportMap = (ast: ParseResult<type.File>, currentPath: string) => {
+  const map = new Map<string, string>();
+
+  traverse(ast, {
+    ImportDeclaration({ node }) {
+      const importSource = node.source.value;
+      const resolvedPath = resolvePath(currentPath, importSource);
+
+      if (!resolvedPath) return;
+
+      node.specifiers.forEach(spec => {
+        if (type.isImportSpecifier(spec) || type.isImportDefaultSpecifier(spec)) {
+          map.set(spec.local.name, resolvedPath);
+        }
+      });
+    },
+  });
+
+  return map;
+};
