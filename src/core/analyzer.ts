@@ -1,3 +1,4 @@
+import print from '@/core/console';
 import { getDefinedComponents, getImportMap } from '@/core/parser';
 import type { Component, Key, Link, Node, Path } from '@/types';
 import { parseFile, readFileSync } from '@/utils/file';
@@ -57,6 +58,7 @@ const analyzer = (entryPath: Path) => {
     const importKey = importPath ? (`${importPath}::${childName}` as const) : null;
 
     const childNode = compTree.get(directKey) ?? (importKey ? compTree.get(importKey) : undefined);
+    if (compTree.has(directKey) && childNode) childNode.internal = true;
 
     if (childNode) {
       parentNode.children[childName] = childNode;
@@ -66,7 +68,7 @@ const analyzer = (entryPath: Path) => {
   const root = compTree.values().next().value;
 
   if (root) {
-    console.log(root);
+    print(root);
   }
 };
 
