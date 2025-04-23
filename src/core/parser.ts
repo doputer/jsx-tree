@@ -2,6 +2,8 @@ import { ParseResult } from '@babel/parser';
 import traverse, { Node } from '@babel/traverse';
 import * as type from '@babel/types';
 
+import { resolvePath } from '@/utils/file';
+
 export const getUsedComponents = (node: Node): string[] => {
   const components = new Set<string>();
 
@@ -64,4 +66,25 @@ export const getDefinedComponents = (ast: ParseResult<type.File>) => {
   });
 
   return definitions;
+};
+
+export const getImportMap = (ast: ParseResult<type.File>, currentPath: string) => {
+  const map = new Map<string, string>();
+
+  traverse(ast, {
+    ImportDeclaration({ node }) {
+      const importSource = node.source.value;
+      const resolvedPath = resolvePath(currentPath, importSource);
+
+      if (!resolvedPath) return;
+
+      node.specifiers.forEach(spec => {
+        if (type.isImportSpecifier(spec) || type.isImportDefaultSpecifier(spec)) {
+          map.set(spec.local.name, resolvedPath);
+        }
+      });
+    },
+  });
+
+  return map;
 };
