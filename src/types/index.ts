@@ -19,6 +19,7 @@ export type Definition = {
 export type Node = {
   name: Component;
   path: Path;
+  internal?: true;
   children: Record<Component, Node>;
 };
 
