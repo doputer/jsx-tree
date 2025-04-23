@@ -9,4 +9,17 @@ export type Component = string;
 
 export type Path = string;
 
-export type Definition = { name: Component; components: Component[] };
+export type Key = `${Path}::${Component}`;
+
+export type Definition = {
+  name: Component;
+  components: Component[];
+};
+
+export type Node = {
+  name: Component;
+  path: Path;
+  children: Record<Component, Node>;
+};
+
+export type Link = [parentKey: Key, parentPath: Path, childName: Component];
