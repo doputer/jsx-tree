@@ -9,10 +9,12 @@ export const getUsedComponents = (node: Node): string[] => {
       enter() {
         type.traverseFast(node, child => {
           if (type.isJSXElement(child)) {
-            const noed = child.openingElement.name;
+            const node = child.openingElement.name;
 
-            if (type.isJSXIdentifier(noed)) {
-              components.add(noed.name);
+            if (type.isJSXIdentifier(node)) {
+              components.add(node.name);
+            } else if (type.isJSXMemberExpression(node)) {
+              components.add(getJSXMemberComponent(node));
             }
           }
         });
@@ -21,4 +23,13 @@ export const getUsedComponents = (node: Node): string[] => {
   });
 
   return [...components];
+};
+
+const getJSXMemberComponent = (node: type.JSXMemberExpression): string => {
+  const object = node.object;
+  const property = node.property;
+
+  const component = type.isJSXIdentifier(object) ? object.name : getJSXMemberComponent(object);
+
+  return `${component}.${property.name}`;
 };
