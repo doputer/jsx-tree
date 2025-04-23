@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { getUsedComponents } from '@/core/parser';
+import { getDefinedComponents } from '@/core/parser';
 import { parseFile, readFileSync } from '@/utils/file';
 
 const entryPath = path.resolve(__dirname, '../../example/index.jsx');
@@ -8,7 +8,7 @@ const entryPath = path.resolve(__dirname, '../../example/index.jsx');
 const analyzer = () => {
   const code = readFileSync(entryPath);
   const ast = parseFile(code);
-  const components = getUsedComponents(ast);
+  const components = getDefinedComponents(ast);
 
   console.log(components);
 };

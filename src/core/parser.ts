@@ -1,3 +1,4 @@
+import { ParseResult } from '@babel/parser';
 import traverse, { Node } from '@babel/traverse';
 import * as type from '@babel/types';
 
@@ -32,4 +33,35 @@ const getJSXMemberComponent = (node: type.JSXMemberExpression): string => {
   const component = type.isJSXIdentifier(object) ? object.name : getJSXMemberComponent(object);
 
   return `${component}.${property.name}`;
+};
+
+export const getDefinedComponents = (ast: ParseResult<type.File>) => {
+  const definitions: { name: string; components: string[] }[] = [];
+
+  traverse(ast, {
+    FunctionDeclaration({ node }) {
+      if (node.id?.name) {
+        const name = node.id.name;
+        const components = getUsedComponents(node.body);
+
+        definitions.push({ name, components });
+      }
+    },
+    VariableDeclaration({ node }) {
+      node.declarations.forEach(decl => {
+        if (
+          type.isIdentifier(decl.id) &&
+          decl.init &&
+          (type.isArrowFunctionExpression(decl.init) || type.isFunctionExpression(decl.init))
+        ) {
+          const name = decl.id.name;
+          const components = getUsedComponents(decl.init.body);
+
+          definitions.push({ name, components });
+        }
+      });
+    },
+  });
+
+  return definitions;
 };
