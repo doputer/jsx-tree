@@ -4,7 +4,7 @@ import * as type from '@babel/types';
 import type { AST, Component, Definition, Path } from '@/types';
 import { resolvePath } from '@/utils/path';
 
-const getUsedComponents = (node: Node) => {
+export const getUsedComponents = (node: Node) => {
   const components = new Set<Component>();
 
   traverse(type.file(type.program([])), {
