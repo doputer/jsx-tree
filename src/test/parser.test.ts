@@ -1,6 +1,11 @@
 import * as type from '@babel/types';
 
-import { getDefinedComponents, getJSXMemberComponent, getUsedComponents } from '@/core/parser';
+import {
+  getDefinedComponents,
+  getImportMap,
+  getJSXMemberComponent,
+  getUsedComponents,
+} from '@/core/parser';
 import { parseFile } from '@/utils/file';
 
 describe('getJSXMemberComponent', () => {
@@ -113,5 +118,38 @@ describe('getDefinedComponents', () => {
         components: ['Footer'],
       },
     ]);
+  });
+});
+
+jest.mock('@/utils/path', () => ({
+  resolvePath: jest.fn((_, target) => `/resolved/${target}`),
+}));
+
+describe('getImportMap', () => {
+  it('import된 컴포넌트를 경로로 매핑한다', () => {
+    const code = `
+      import React from 'react';
+      import { Header, Footer } from './layout';
+    `;
+    const ast = parseFile(code);
+    const result = getImportMap(ast, '/src/pages/App.tsx');
+
+    expect(result.get('React')).toBe('/resolved/react');
+    expect(result.get('Header')).toBe('/resolved/./layout');
+    expect(result.get('Footer')).toBe('/resolved/./layout');
+  });
+
+  it('resolvedPath가 없으면 무시된다', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const resolvePath = require('@/utils/path').resolvePath;
+    resolvePath.mockImplementation(() => null);
+
+    const code = `
+      import Something from 'unknown';
+    `;
+    const ast = parseFile(code);
+    const result = getImportMap(ast, '/src');
+
+    expect(result.size).toBe(0);
   });
 });
