@@ -2,7 +2,7 @@ import traverse, { Node } from '@babel/traverse';
 import * as type from '@babel/types';
 
 import type { AST, Component, Definition, Path } from '@/types';
-import { resolvePath } from '@/utils/file';
+import { resolvePath } from '@/utils/path';
 
 const getUsedComponents = (node: Node) => {
   const components = new Set<Component>();
