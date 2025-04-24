@@ -2,16 +2,19 @@ import print from '@/core/console';
 import { getDefinedComponents, getImportMap } from '@/core/parser';
 import type { Component, Key, Link, Node, Path } from '@/types';
 import { parseFile, readFileSync } from '@/utils/file';
+import Queue from '@/utils/queue';
 
 const analyzer = (entryPath: Path) => {
-  const queue = [entryPath];
+  const queue = new Queue<string>();
+  queue.enqueue(entryPath);
+
   const visited = new Set<Key>();
   const compTree = new Map<Key, Node>();
   const pathImportMap = new Map<Path, Map<Component, Path>>();
   const pendingLinks: Link[] = [];
 
-  while (queue.length > 0) {
-    const parentPath = queue.shift()!;
+  while (!queue.isEmpty()) {
+    const parentPath = queue.dequeue()!;
     const code = readFileSync(parentPath);
     const ast = parseFile(code);
 
@@ -41,7 +44,7 @@ const analyzer = (entryPath: Path) => {
         if (childPath) {
           const childKey = `${childPath}::${childName}` as const;
           if (!visited.has(childKey)) {
-            queue.push(childPath);
+            queue.enqueue(childPath);
           }
         }
       }
