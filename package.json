@@ -1,9 +1,19 @@
 {
   "name": "jsx-tree",
   "version": "0.0.1",
+  "description": "Analyze JSX files as a tree structure",
   "license": "MIT",
   "main": "index.ts",
+  "bin": {
+    "jsx-tree": "bin/cli.js"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "README.md"
+  ],
   "scripts": {
+    "build": "tsc && tsc-alias",
     "dev": "npx ts-node -r tsconfig-paths/register src/index.ts"
   },
   "prettier": "./configs/prettier/index.js",
@@ -26,6 +36,7 @@
     "prettier": "^3.5.3",
     "prettier-plugin-packagejson": "^2.5.10",
     "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.15",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.8.3"
   }
