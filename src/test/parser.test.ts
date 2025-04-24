@@ -1,6 +1,6 @@
 import * as type from '@babel/types';
 
-import { getJSXMemberComponent, getUsedComponents } from '@/core/parser';
+import { getDefinedComponents, getJSXMemberComponent, getUsedComponents } from '@/core/parser';
 import { parseFile } from '@/utils/file';
 
 describe('getJSXMemberComponent', () => {
@@ -77,5 +77,41 @@ describe('getUsedComponents', () => {
     const result = getUsedComponents(ast);
 
     expect(result).toEqual([]);
+  });
+});
+
+describe('getDefinedComponents', () => {
+  it('FunctionDeclaration에서 컴포넌트를 추출한다', () => {
+    const code = `
+      function App() {
+        return <Header />;
+      }
+    `;
+    const ast = parseFile(code);
+    const result = getDefinedComponents(ast);
+
+    expect(result).toEqual([
+      {
+        name: 'App',
+        components: ['Header'],
+      },
+    ]);
+  });
+
+  it('VariableDeclaration에서 컴포넌트를 추출한다', () => {
+    const code = `
+      const Main = () => {
+        return <Footer />;
+      };
+    `;
+    const ast = parseFile(code);
+    const result = getDefinedComponents(ast);
+
+    expect(result).toEqual([
+      {
+        name: 'Main',
+        components: ['Footer'],
+      },
+    ]);
   });
 });
