@@ -28,7 +28,7 @@ export const getUsedComponents = (node: Node) => {
   return [...components];
 };
 
-const getJSXMemberComponent = (node: type.JSXMemberExpression): Component => {
+export const getJSXMemberComponent = (node: type.JSXMemberExpression): Component => {
   const object = node.object;
   const property = node.property;
 

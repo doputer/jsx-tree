@@ -1,5 +1,26 @@
-import { getUsedComponents } from '@/core/parser';
+import * as type from '@babel/types';
+
+import { getJSXMemberComponent, getUsedComponents } from '@/core/parser';
 import { parseFile } from '@/utils/file';
+
+describe('getJSXMemberComponent', () => {
+  it('JSXMemberExpression을 문자열로 반환한다', () => {
+    const node = type.jsxMemberExpression(type.jsxIdentifier('UI'), type.jsxIdentifier('Button'));
+    const result = getJSXMemberComponent(node);
+
+    expect(result).toBe('UI.Button');
+  });
+
+  it('중첩된 JSXMemberExpression도 올바르게 처리한다', () => {
+    const node = type.jsxMemberExpression(
+      type.jsxMemberExpression(type.jsxIdentifier('App'), type.jsxIdentifier('UI')),
+      type.jsxIdentifier('Card'),
+    );
+    const result = getJSXMemberComponent(node);
+
+    expect(result).toBe('App.UI.Card');
+  });
+});
 
 describe('getUsedComponents', () => {
   it('JSXIdentifier 컴포넌트를 추출한다', () => {
