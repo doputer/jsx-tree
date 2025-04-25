@@ -1,78 +1,109 @@
-import print from '@/core/console';
-import { getDefinedComponents, getImportMap } from '@/core/parser';
-import type { Component, Key, Link, Node, Path } from '@/types';
+import traverse from '@babel/traverse';
+import * as type from '@babel/types';
+
+import { getImportMap } from '@/core/parser';
+import { AST, Component, Path } from '@/types';
 import { parseFile, readFileSync } from '@/utils/file';
-import Queue from '@/utils/queue';
 
-const analyzer = (entryPath: Path) => {
-  const queue = new Queue<string>();
-  queue.enqueue(entryPath);
+type Node = type.JSXElement | type.JSXFragment | null;
 
-  const visited = new Set<Key>();
-  const compTree = new Map<Key, Node>();
-  const pathImportMap = new Map<Path, Map<Component, Path>>();
-  const pendingLinks: Link[] = [];
+type Definition = {
+  name: Component;
+  path: Path;
+  node: Node;
+};
 
-  while (!queue.isEmpty()) {
-    const parentPath = queue.dequeue()!;
-    const code = readFileSync(parentPath);
+const analyzer = (entry: Path) => {
+  const analyzedFiles = new Map<Path, Record<Component, Definition>>();
+  const allDefinitions: Record<Component, Definition> = {};
+
+  analyzeFile(entry, analyzedFiles, allDefinitions);
+
+  console.log(allDefinitions);
+};
+
+const analyzeFile = (
+  path: Path,
+  analyzedFiles: Map<Path, Record<Component, Definition>>,
+  allDefinitions: Record<Component, Definition>,
+) => {
+  if (analyzedFiles.has(path)) return analyzedFiles.get(path) || {};
+
+  try {
+    const code = readFileSync(path);
     const ast = parseFile(code);
+    const importMap = getImportMap(ast, path);
+    const definitions = getDefinitions(ast, path);
 
-    const definedComponents = getDefinedComponents(ast);
-    const importMap = getImportMap(ast, parentPath);
+    Object.entries(definitions).forEach(([name, component]) => {
+      allDefinitions[name] = component;
+    });
 
-    pathImportMap.set(parentPath, importMap);
+    for (const importPath of importMap.values()) {
+      if (analyzedFiles.has(importPath)) continue;
 
-    for (const { name: parentName, components } of definedComponents) {
-      const parentKey = `${parentPath}::${parentName}` as const;
+      analyzeFile(importPath, analyzedFiles, allDefinitions);
+    }
 
-      if (visited.has(parentKey)) continue;
-      visited.add(parentKey);
+    return allDefinitions;
+  } catch {
+    return {};
+  }
+};
 
-      const node: Node = {
-        name: parentName,
-        path: parentPath,
-        children: {},
-      } satisfies Node;
+const getDefinitions = (ast: AST, sourcePath: Path) => {
+  const components: Record<Component, Definition> = {};
 
-      compTree.set(parentKey, node);
+  traverse(ast, {
+    FunctionDeclaration(path) {
+      const name = path.node.id?.name;
+      if (name) {
+        let node: Node = null;
 
-      for (const childName of components) {
-        pendingLinks.push([parentKey, parentPath, childName]);
+        path.traverse({
+          ReturnStatement(retPath) {
+            const argument = retPath.node.argument;
 
-        const childPath = importMap.get(childName);
-        if (childPath) {
-          const childKey = `${childPath}::${childName}` as const;
-          if (!visited.has(childKey)) {
-            queue.enqueue(childPath);
+            if (type.isJSXElement(argument) || type.isJSXFragment(argument)) {
+              node = argument;
+            }
+          },
+        });
+
+        components[name] = { name, path: sourcePath, node };
+      }
+    },
+    VariableDeclarator(path) {
+      const id = path.node.id;
+      const name = type.isIdentifier(id) ? id.name : null;
+
+      if (name) {
+        const init = path.node.init;
+
+        if (type.isArrowFunctionExpression(init) || type.isFunctionExpression(init)) {
+          let node: Node = null;
+
+          if (type.isJSXElement(init.body) || type.isJSXFragment(init.body)) {
+            node = init.body;
+          } else {
+            path.traverse({
+              ReturnStatement(retPath) {
+                const argument = retPath.node.argument;
+
+                if (type.isJSXElement(argument) || type.isJSXFragment(argument)) {
+                  node = argument;
+                }
+              },
+            });
           }
+
+          components[name] = { name, path: sourcePath, node };
         }
       }
-    }
-  }
+    },
+  });
 
-  for (const [parentKey, parentPath, childName] of pendingLinks) {
-    const parentNode = compTree.get(parentKey);
-    if (!parentNode) continue;
-
-    const directKey = `${parentPath}::${childName}` as const;
-    const importMap = pathImportMap.get(parentPath);
-    const importPath = importMap?.get(childName);
-    const importKey = importPath ? (`${importPath}::${childName}` as const) : null;
-
-    const childNode = compTree.get(directKey) ?? (importKey ? compTree.get(importKey) : undefined);
-    if (compTree.has(directKey) && childNode) childNode.internal = true;
-
-    if (childNode) {
-      parentNode.children[childName] = childNode;
-    }
-  }
-
-  const root = compTree.values().next().value;
-
-  if (root) {
-    print(root);
-  }
+  return components;
 };
 
 export default analyzer;
