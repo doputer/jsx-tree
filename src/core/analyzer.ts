@@ -1,15 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import traverse from '@babel/traverse';
 import * as type from '@babel/types';
 
-import { getImportMap } from '@/core/parser';
-import { AST, Component, Path } from '@/types';
+import { getImportMap, getJSXMemberComponent } from '@/core/parser';
+import { AST, Component, Key, Path } from '@/types';
 import { parseFile, readFileSync } from '@/utils/file';
 
 type Node = type.JSXElement | type.JSXFragment | null;
 
 type Definition = {
   name: Component;
-  path: Path;
+  path?: Path;
   node: Node;
 };
 
@@ -19,7 +21,10 @@ const analyzer = (entry: Path) => {
 
   analyzeFile(entry, analyzedFiles, allDefinitions);
 
-  console.log(allDefinitions);
+  const tree = buildHierarchy(entry, allDefinitions);
+
+  console.log('###');
+  console.dir(tree, { depth: null });
 };
 
 const analyzeFile = (
@@ -34,6 +39,8 @@ const analyzeFile = (
     const ast = parseFile(code);
     const importMap = getImportMap(ast, path);
     const definitions = getDefinitions(ast, path);
+
+    analyzedFiles.set(path, definitions);
 
     Object.entries(definitions).forEach(([name, component]) => {
       allDefinitions[name] = component;
@@ -104,6 +111,194 @@ const getDefinitions = (ast: AST, sourcePath: Path) => {
   });
 
   return components;
+};
+
+const buildHierarchy = (sourcePath: Path, allDefinitions: Record<Component, Definition>) => {
+  const tree = {
+    type: 'root',
+    components: {} as Record<Component, any>,
+  };
+
+  for (const [name, definition] of Object.entries(allDefinitions)) {
+    // root에 정의되지 않은 컴포넌트는 처리하지 않음
+    if (sourcePath !== definition.path) continue;
+
+    const key = `${definition.path}::${name}` as const;
+    const processedComponents = new Set<Key>();
+
+    processedComponents.add(key);
+
+    tree.components[name] = {
+      type: name,
+      path: definition.path,
+      children: processComponent(definition.node, allDefinitions, processedComponents),
+    };
+  }
+
+  return tree;
+};
+
+// 컴포넌트의 내부 구조와 자식 컴포넌트를 처리하는 함수
+const processComponent = (
+  node: Node,
+  allDefinitions: Record<Component, Definition>,
+  processedComponents: Set<Key>,
+) => {
+  if (!node) return null;
+
+  const nodeName = getNodeName(node);
+  const treeNode = {
+    type: nodeName,
+    children: [] as any[],
+  };
+
+  if ('children' in node && node.children) {
+    for (const child of node.children) {
+      // 텍스트 노드 처리
+      if (type.isJSXText(child)) {
+        const text = child.value.trim();
+
+        if (text) {
+          treeNode.children.push({ type: 'TEXT', value: text });
+        }
+      }
+
+      // JSX 표현식 처리
+      else if (type.isJSXExpressionContainer(child)) {
+        const expression = child.expression;
+
+        if (type.isIdentifier(expression) && expression.name === 'children') {
+          treeNode.children.push({
+            type: 'CHILDREN_PLACEHOLDER',
+            value: 'children',
+          });
+        } else {
+          treeNode.children.push({
+            type: 'EXPRESSION',
+            value: `EXPRESSION(${expression.type})`,
+          });
+        }
+      }
+
+      // 자식 JSX 요소 처리
+      else if (type.isJSXElement(child)) {
+        const childNodeName = getNodeName(child);
+        const definition = allDefinitions[childNodeName];
+
+        if (definition) {
+          const key = `${definition.path}::${childNodeName}` as const;
+
+          if (processedComponents.has(key)) {
+            treeNode.children.push({
+              type: childNodeName,
+              path: definition.path,
+              isComponent: true,
+              render: {
+                type: 'CIRCULAR_REFERENCE',
+                value: childNodeName,
+              },
+            });
+
+            continue;
+          }
+
+          const newProcessedComponents = new Set(processedComponents);
+          newProcessedComponents.add(key);
+
+          // 자식 컴포넌트의 자식 요소들 처리
+          const childChildren = processChildren(child, allDefinitions, newProcessedComponents);
+
+          // 컴포넌트 정의에서 렌더링 구조 가져오기
+          let render = null;
+          if (definition.node) {
+            render = processComponent(definition.node, allDefinitions, newProcessedComponents);
+
+            // children placeholder 찾아서 실제 자식으로 대체
+            if (render) {
+              const childrenIndex = render.children.findIndex(
+                (item: any) => item.type === 'CHILDREN_PLACEHOLDER',
+              );
+
+              if (childrenIndex !== -1) {
+                render = { ...render, children: [...render.children] };
+                render.children.splice(childrenIndex, 1, ...childChildren);
+              }
+            }
+          }
+
+          treeNode.children.push({
+            type: childNodeName,
+            path: definition.path,
+            isComponent: true,
+            render,
+          });
+        }
+        // 일반 HTML 요소
+        else {
+          const childNode = processComponent(child, allDefinitions, processedComponents);
+          if (childNode) treeNode.children.push(childNode);
+        }
+      }
+      // JSX Fragment
+      else if (type.isJSXFragment(child)) {
+        const childNode = processComponent(child, allDefinitions, processedComponents);
+        if (childNode) treeNode.children.push(childNode);
+      }
+    }
+  }
+
+  return treeNode;
+};
+
+const processChildren = (
+  node: Node,
+  allDefinitions: Record<Component, Definition>,
+  processedComponents: Set<Key>,
+) => {
+  if (!node) return [];
+
+  const children: any[] = [];
+
+  for (const child of node.children) {
+    if (type.isJSXText(child)) {
+      const text = child.value.trim();
+      if (text) {
+        children.push({
+          type: 'TEXT',
+          value: text,
+        });
+      }
+    } else if (type.isJSXExpressionContainer(child)) {
+      const expression = child.expression;
+      children.push({
+        type: 'EXPRESSION',
+        value: `EXPRESSION(${expression.type})`,
+      });
+    } else if (type.isJSXElement(child)) {
+      const processed = processComponent(child, allDefinitions, processedComponents);
+      if (processed) children.push(processed);
+    } else if (type.isJSXFragment(child)) {
+      const processed = processComponent(child, allDefinitions, processedComponents);
+      if (processed) children.push(processed);
+    }
+  }
+
+  return children;
+};
+
+const getNodeName = (node: Node) => {
+  if (type.isJSXFragment(node)) return 'Fragment';
+
+  if (type.isJSXElement(node) && node.openingElement.name) {
+    const nameNode = node.openingElement.name;
+
+    // 일반 태그 (예: div, span, Component, ...)
+    if (type.isJSXIdentifier(nameNode)) return nameNode.name;
+    // 접근 표현식 (예: React.Component, ...)
+    else if (type.isJSXMemberExpression(nameNode)) return getJSXMemberComponent(nameNode);
+  }
+
+  return 'Unknown';
 };
 
 export default analyzer;
