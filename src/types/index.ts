@@ -1,5 +1,12 @@
 import type { ParseResult } from '@babel/parser';
-import type { File, JSXElement, JSXFragment } from '@babel/types';
+import type {
+  File,
+  JSXElement,
+  JSXExpressionContainer,
+  JSXFragment,
+  JSXSpreadChild,
+  JSXText,
+} from '@babel/types';
 
 // type Brand<K, T> = K & { __brand: T };
 
@@ -17,11 +24,17 @@ export type Definition = {
   node: Node;
 };
 
-export type Node = JSXElement | JSXFragment | null;
+export type Node =
+  | JSXText
+  | JSXElement
+  | JSXFragment
+  | JSXSpreadChild
+  | JSXExpressionContainer
+  | null;
 
 export type Root = {
   type: string;
-  components: Record<Name, Component | null>;
+  components: Record<Name, Component>;
 };
 
 export type Component = HtmlNode | ComponentNode | TextNode | PlaceholderNode | ExpressionNode;
@@ -53,8 +66,3 @@ type ExpressionNode = {
   type: 'EXPRESSION';
   value: string;
 };
-
-// type CircularReferenceNode = {
-//   type: 'CIRCULAR_REFERENCE';
-//   value: string;
-// };
