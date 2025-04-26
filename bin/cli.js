@@ -27,7 +27,8 @@ program
   .option('-e, --entry <file>', 'Entry file to analyze (default: ./index.jsx or ./index.tsx)')
   .option('-c, --components-only', 'Show only component nodes in the tree (filters out HTML tags)')
   .option('-h, --html-only', 'Show only HTML tag nodes in the tree (filters out components)')
-  .option('-t, --show-text', 'Include text nodes in the output (default: false)');
+  .option('-t, --show-text', 'Include text nodes in the output (default: false)')
+  .option('-d, --depth <depth>', 'Limit the tree display to specified depth level');
 
 program.action((entryArg, options) => {
   const cwd = process.cwd();

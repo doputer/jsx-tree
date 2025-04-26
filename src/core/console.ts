@@ -15,6 +15,7 @@ const defaultOptions: FilterOptions = {
   componentsOnly: false,
   htmlOnly: false,
   showText: false,
+  depth: 0,
 };
 
 const print = (
@@ -22,18 +23,23 @@ const print = (
   indent = '',
   isPrevLast = true,
   isRoot = true,
+  depth = 2,
   options: FilterOptions = defaultOptions,
 ) => {
+  if (options.depth && depth > options.depth) {
+    return;
+  }
+
   if (!isRoot && !shouldShow(node, options)) {
     if (node.type === 'COMPONENT' && node.render) {
-      print(node.render, indent, isPrevLast, false, options);
+      print(node.render, indent, isPrevLast, false, depth + 1, options);
 
       return;
     } else if (node.type === 'HTML') {
       node.children.forEach((child, index, array) => {
         const isLast = array.length - 1 === index;
 
-        print(child, indent, isLast, false, options);
+        print(child, indent, isLast, false, depth + 1, options);
       });
 
       return;
@@ -51,13 +57,13 @@ const print = (
   if (node.type === 'COMPONENT' && node.render) {
     const childIndent = isRoot ? '' : indent + (isPrevLast ? INDENT_LAST : INDENT_MIDDLE);
 
-    print(node.render, childIndent, true, false, options);
+    print(node.render, childIndent, true, false, depth + 1, options);
   } else if (node.type === 'HTML') {
     node.children.forEach((child, index, array) => {
       const childIndent = isRoot ? '' : indent + (isPrevLast ? INDENT_LAST : INDENT_MIDDLE);
       const isLast = array.length - 1 === index;
 
-      print(child, childIndent, isLast, false, options);
+      print(child, childIndent, isLast, false, depth + 1, options);
     });
   }
 };
@@ -106,7 +112,7 @@ const printTree = (root: Component, options: FilterOptions = {}) => {
     mergedOptions.htmlOnly = false;
   }
 
-  print(root, '', true, true, mergedOptions);
+  print(root, '', true, true, 0, mergedOptions);
 };
 
 export default printTree;
