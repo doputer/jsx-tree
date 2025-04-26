@@ -66,3 +66,9 @@ type ExpressionNode = {
   type: 'EXPRESSION';
   value: string;
 };
+
+export type FilterOptions = {
+  componentsOnly?: boolean;
+  htmlOnly?: boolean;
+  showText?: boolean;
+};

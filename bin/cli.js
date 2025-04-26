@@ -24,7 +24,10 @@ program
   .version(pkg.version)
   .addHelpText('beforeAll', logo)
   .argument('[file]', 'Path to the entry file (optional if using -e or default file exists)')
-  .option('-e, --entry <file>', 'Entry file to analyze (default: ./index.jsx or ./index.tsx)');
+  .option('-e, --entry <file>', 'Entry file to analyze (default: ./index.jsx or ./index.tsx)')
+  .option('-c, --components-only', 'Show only component nodes in the tree (filters out HTML tags)')
+  .option('-h, --html-only', 'Show only HTML tag nodes in the tree (filters out components)')
+  .option('-t, --show-text', 'Include text nodes in the output (default: false)');
 
 program.action((entryArg, options) => {
   const cwd = process.cwd();
@@ -42,7 +45,7 @@ program.action((entryArg, options) => {
     process.exit(1);
   }
 
-  require('../dist/core/analyzer.js').default(entry);
+  require('../dist/core/analyzer.js').default(entry, options);
 });
 
 program.parse(process.argv);
