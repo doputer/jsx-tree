@@ -24,7 +24,7 @@ const analyzer = (entry: Path) => {
   const tree = buildHierarchy(entry, allDefinitions);
 
   console.log('###');
-  console.dir(tree, { depth: null });
+  console.dir(tree.components['App'], { depth: null });
 };
 
 const analyzeFile = (
@@ -188,25 +188,25 @@ const processComponent = (
         if (definition) {
           const key = `${definition.path}::${childNodeName}` as const;
 
-          if (processedComponents.has(key)) {
-            treeNode.children.push({
-              type: childNodeName,
-              path: definition.path,
-              isComponent: true,
-              render: {
-                type: 'CIRCULAR_REFERENCE',
-                value: childNodeName,
-              },
-            });
+          // if (processedComponents.has(key)) {
+          //   treeNode.children.push({
+          //     type: childNodeName,
+          //     path: definition.path,
+          //     isComponent: true,
+          //     render: {
+          //       type: 'CIRCULAR_REFERENCE',
+          //       value: childNodeName,
+          //     },
+          //   });
 
-            continue;
-          }
+          //   continue;
+          // }
 
           const newProcessedComponents = new Set(processedComponents);
           newProcessedComponents.add(key);
 
           // 자식 컴포넌트의 자식 요소들 처리
-          const childChildren = processChildren(child, allDefinitions, newProcessedComponents);
+          const childChildren = processComponent(child, allDefinitions, newProcessedComponents);
 
           // 컴포넌트 정의에서 렌더링 구조 가져오기
           let render = null;
@@ -221,7 +221,7 @@ const processComponent = (
 
               if (childrenIndex !== -1) {
                 render = { ...render, children: [...render.children] };
-                render.children.splice(childrenIndex, 1, ...childChildren);
+                render.children.splice(childrenIndex, 1, ...(childChildren?.children || []));
               }
             }
           }
@@ -248,42 +248,6 @@ const processComponent = (
   }
 
   return treeNode;
-};
-
-const processChildren = (
-  node: Node,
-  allDefinitions: Record<Component, Definition>,
-  processedComponents: Set<Key>,
-) => {
-  if (!node) return [];
-
-  const children: any[] = [];
-
-  for (const child of node.children) {
-    if (type.isJSXText(child)) {
-      const text = child.value.trim();
-      if (text) {
-        children.push({
-          type: 'TEXT',
-          value: text,
-        });
-      }
-    } else if (type.isJSXExpressionContainer(child)) {
-      const expression = child.expression;
-      children.push({
-        type: 'EXPRESSION',
-        value: `EXPRESSION(${expression.type})`,
-      });
-    } else if (type.isJSXElement(child)) {
-      const processed = processComponent(child, allDefinitions, processedComponents);
-      if (processed) children.push(processed);
-    } else if (type.isJSXFragment(child)) {
-      const processed = processComponent(child, allDefinitions, processedComponents);
-      if (processed) children.push(processed);
-    }
-  }
-
-  return children;
 };
 
 const getNodeName = (node: Node) => {
