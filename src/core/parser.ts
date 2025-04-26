@@ -1,9 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import traverse from '@babel/traverse';
 import * as type from '@babel/types';
 
-import type { AST, Definition, Key, Name, Node, Path } from '@/types';
+import type { AST, Definition, Key, Name, Node, Path, Root, Tree } from '@/types';
 import { parseFile, readFileSync } from '@/utils/file';
 import { resolvePath } from '@/utils/path';
 
@@ -66,6 +64,7 @@ const getDefinitions = (ast: AST, sourcePath: Path) => {
   traverse(ast, {
     FunctionDeclaration(path) {
       const name = path.node.id?.name;
+
       if (name) {
         let node: Node = null;
 
@@ -116,9 +115,9 @@ const getDefinitions = (ast: AST, sourcePath: Path) => {
 };
 
 export const buildHierarchy = (sourcePath: Path, allDefinitions: Map<Name, Definition>) => {
-  const tree = {
+  const tree: Root = {
     type: 'root',
-    components: {} as Record<Name, any>,
+    components: {},
   };
 
   for (const [name, definition] of allDefinitions) {
@@ -130,10 +129,12 @@ export const buildHierarchy = (sourcePath: Path, allDefinitions: Map<Name, Defin
 
     processedComponents.add(key);
 
+    const children = processComponent(definition.node, allDefinitions, processedComponents);
+
     tree.components[name] = {
       type: name,
       path: definition.path,
-      children: processComponent(definition.node, allDefinitions, processedComponents),
+      children: children ? [children] : [],
     };
   }
 
@@ -141,7 +142,7 @@ export const buildHierarchy = (sourcePath: Path, allDefinitions: Map<Name, Defin
 };
 
 // 컴포넌트의 내부 구조와 자식 컴포넌트를 처리하는 함수
-export const processComponent = (
+const processComponent = (
   node: Node,
   allDefinitions: Map<Name, Definition>,
   processedComponents: Set<Key>,
@@ -149,9 +150,9 @@ export const processComponent = (
   if (!node) return null;
 
   const nodeName = getNodeName(node);
-  const treeNode = {
+  const treeNode: Tree = {
     type: nodeName,
-    children: [] as any[],
+    children: [],
   };
 
   if ('children' in node && node.children) {
@@ -161,7 +162,10 @@ export const processComponent = (
         const text = child.value.trim();
 
         if (text) {
-          treeNode.children.push({ type: 'TEXT', value: text });
+          treeNode.children.push({
+            type: 'TEXT',
+            value: text,
+          });
         }
       }
 
@@ -218,7 +222,7 @@ export const processComponent = (
             // children placeholder 찾아서 실제 자식으로 대체
             if (render) {
               const childrenIndex = render.children.findIndex(
-                (item: any) => item.type === 'CHILDREN_PLACEHOLDER',
+                item => item.type === 'CHILDREN_PLACEHOLDER',
               );
 
               if (childrenIndex !== -1) {
@@ -235,12 +239,14 @@ export const processComponent = (
             render,
           });
         }
+
         // 일반 HTML 요소
         else {
           const childNode = processComponent(child, allDefinitions, processedComponents);
           if (childNode) treeNode.children.push(childNode);
         }
       }
+
       // JSX Fragment
       else if (type.isJSXFragment(child)) {
         const childNode = processComponent(child, allDefinitions, processedComponents);
