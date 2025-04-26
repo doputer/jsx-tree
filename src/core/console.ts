@@ -1,26 +1,30 @@
-import { basename } from 'path';
+import { basename } from 'node:path';
 
 import { cyan, yellow } from 'chalk';
 
-import { Node } from '@/types';
+import { Component } from '@/types';
 
 const log = console.log;
 
-const print = (node: Node, indent = '', isPrevLast = true, isRoot = true) => {
+const print = (node: Component, indent = '', isPrevLast = true, isRoot = true) => {
   const connector = isRoot ? '' : isPrevLast ? '└── ' : '├── ';
-  const name = node.internal ? yellow(node.name) : cyan(node.name);
-  const path = node.internal ? '' : `(${basename(node.path)})`;
+  const name = node.isComponent ? yellow(node.type) : cyan(node.type);
+  const path = node.path ? `(${basename(node.path)})` : '';
 
   log(`${indent}${connector}${name} ${path}`.trimEnd());
 
-  const values = Object.values(node.children);
-
-  values.forEach((child, index) => {
+  if (node?.isComponent && node.render) {
     const childIndent = isRoot ? '' : indent + (isPrevLast ? '    ' : '│   ');
-    const isLast = values.length - 1 === index;
 
-    print(child, childIndent, isLast, false);
-  });
+    print(node.render, childIndent, true, false);
+  } else if (node.children) {
+    node.children.forEach((child, index, array) => {
+      const childIndent = isRoot ? '' : indent + (isPrevLast ? '    ' : '│   ');
+      const isLast = array.length - 1 === index;
+
+      print(child, childIndent, isLast, false);
+    });
+  }
 };
 
 export default print;

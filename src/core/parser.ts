@@ -147,6 +147,7 @@ export const buildHierarchy = (sourcePath: Path, allDefinitions: Map<Name, Defin
     tree.components[name] = {
       type: name,
       path: definition.path,
+      isComponent: true,
       children: children ? [children] : [],
     };
   }
