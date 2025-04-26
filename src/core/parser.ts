@@ -1,5 +1,18 @@
 import traverse from '@babel/traverse';
-import * as type from '@babel/types';
+import {
+  isArrowFunctionExpression,
+  isFunctionExpression,
+  isIdentifier,
+  isImportDefaultSpecifier,
+  isImportSpecifier,
+  isJSXElement,
+  isJSXExpressionContainer,
+  isJSXFragment,
+  isJSXIdentifier,
+  isJSXMemberExpression,
+  isJSXText,
+  JSXMemberExpression,
+} from '@babel/types';
 
 import type { AST, Definition, Key, Name, Node, Path, Root, Tree } from '@/types';
 import { parseFile, readFileSync } from '@/utils/file';
@@ -48,7 +61,7 @@ const getImportPaths = (ast: AST, currentPath: Path) => {
       if (!resolvedPath) return;
 
       node.specifiers.forEach(spec => {
-        if (type.isImportSpecifier(spec) || type.isImportDefaultSpecifier(spec)) {
+        if (isImportSpecifier(spec) || isImportDefaultSpecifier(spec)) {
           set.add(resolvedPath);
         }
       });
@@ -72,7 +85,7 @@ const getDefinitions = (ast: AST, sourcePath: Path) => {
           ReturnStatement(retPath) {
             const argument = retPath.node.argument;
 
-            if (type.isJSXElement(argument) || type.isJSXFragment(argument)) {
+            if (isJSXElement(argument) || isJSXFragment(argument)) {
               node = argument;
             }
           },
@@ -83,22 +96,22 @@ const getDefinitions = (ast: AST, sourcePath: Path) => {
     },
     VariableDeclarator(path) {
       const id = path.node.id;
-      const name = type.isIdentifier(id) ? id.name : null;
+      const name = isIdentifier(id) ? id.name : null;
 
       if (name) {
         const init = path.node.init;
 
-        if (type.isArrowFunctionExpression(init) || type.isFunctionExpression(init)) {
+        if (isArrowFunctionExpression(init) || isFunctionExpression(init)) {
           let node: Node = null;
 
-          if (type.isJSXElement(init.body) || type.isJSXFragment(init.body)) {
+          if (isJSXElement(init.body) || isJSXFragment(init.body)) {
             node = init.body;
           } else {
             path.traverse({
               ReturnStatement(retPath) {
                 const argument = retPath.node.argument;
 
-                if (type.isJSXElement(argument) || type.isJSXFragment(argument)) {
+                if (isJSXElement(argument) || isJSXFragment(argument)) {
                   node = argument;
                 }
               },
@@ -158,7 +171,7 @@ const processComponent = (
   if ('children' in node && node.children) {
     for (const child of node.children) {
       // 텍스트 노드 처리
-      if (type.isJSXText(child)) {
+      if (isJSXText(child)) {
         const text = child.value.trim();
 
         if (text) {
@@ -170,10 +183,10 @@ const processComponent = (
       }
 
       // JSX 표현식 처리
-      else if (type.isJSXExpressionContainer(child)) {
+      else if (isJSXExpressionContainer(child)) {
         const expression = child.expression;
 
-        if (type.isIdentifier(expression) && expression.name === 'children') {
+        if (isIdentifier(expression) && expression.name === 'children') {
           treeNode.children.push({
             type: 'CHILDREN_PLACEHOLDER',
             value: 'children',
@@ -187,7 +200,7 @@ const processComponent = (
       }
 
       // 자식 JSX 요소 처리
-      else if (type.isJSXElement(child)) {
+      else if (isJSXElement(child)) {
         const childNodeName = getNodeName(child);
         const definition = allDefinitions.get(childNodeName);
 
@@ -248,7 +261,7 @@ const processComponent = (
       }
 
       // JSX Fragment
-      else if (type.isJSXFragment(child)) {
+      else if (isJSXFragment(child)) {
         const childNode = processComponent(child, allDefinitions, processedComponents);
         if (childNode) treeNode.children.push(childNode);
       }
@@ -259,25 +272,25 @@ const processComponent = (
 };
 
 const getNodeName = (node: Node) => {
-  if (type.isJSXFragment(node)) return 'Fragment';
+  if (isJSXFragment(node)) return 'Fragment';
 
-  if (type.isJSXElement(node) && node.openingElement.name) {
+  if (isJSXElement(node) && node.openingElement.name) {
     const nameNode = node.openingElement.name;
 
     // 일반 태그 (예: div, span, Component, ...)
-    if (type.isJSXIdentifier(nameNode)) return nameNode.name;
+    if (isJSXIdentifier(nameNode)) return nameNode.name;
     // 접근 표현식 (예: React.Component, ...)
-    else if (type.isJSXMemberExpression(nameNode)) return getJSXMemberComponent(nameNode);
+    else if (isJSXMemberExpression(nameNode)) return getJSXMemberComponent(nameNode);
   }
 
   return 'Unknown';
 };
 
-const getJSXMemberComponent = (node: type.JSXMemberExpression): Name => {
+const getJSXMemberComponent = (node: JSXMemberExpression): Name => {
   const object = node.object;
   const property = node.property;
 
-  const component = type.isJSXIdentifier(object) ? object.name : getJSXMemberComponent(object);
+  const component = isJSXIdentifier(object) ? object.name : getJSXMemberComponent(object);
 
   return `${component}.${property.name}`;
 };
