@@ -166,7 +166,7 @@ const processNode = (node: Node, allDefinitions: Map<Name, Definition>): Compone
     if (text) {
       return {
         type: 'TEXT',
-        value: text,
+        value: `TEXT(${text})`,
       };
     }
 
