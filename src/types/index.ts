@@ -1,3 +1,5 @@
+import * as type from '@babel/types';
+
 import type { ParseResult } from '@babel/parser';
 import type { File } from '@babel/types';
 
@@ -13,14 +15,8 @@ export type Key = `${Path}::${Component}`;
 
 export type Definition = {
   name: Component;
-  components: Component[];
+  path?: Path;
+  node: Node;
 };
 
-export type Node = {
-  name: Component;
-  path: Path;
-  internal?: true;
-  children: Record<Component, Node>;
-};
-
-export type Link = [parentKey: Key, parentPath: Path, childName: Component];
+export type Node = type.JSXElement | type.JSXFragment | null;
