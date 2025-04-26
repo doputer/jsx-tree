@@ -3,13 +3,13 @@
 import traverse from '@babel/traverse';
 import * as type from '@babel/types';
 
-import type { AST, Component, Definition, Key, Node, Path } from '@/types';
+import type { AST, Definition, Key, Name, Node, Path } from '@/types';
 import { parseFile, readFileSync } from '@/utils/file';
 import { resolvePath } from '@/utils/path';
 
 export const analyzeFile = (entry: Path) => {
   const analyzedFiles = new Set<Path>();
-  const allDefinitions = new Map<Component, Definition>();
+  const allDefinitions = new Map<Name, Definition>();
 
   const traverseFile = (path: Path) => {
     if (analyzedFiles.has(path)) return;
@@ -61,7 +61,7 @@ const getImportPaths = (ast: AST, currentPath: Path) => {
 };
 
 const getDefinitions = (ast: AST, sourcePath: Path) => {
-  const components = new Map<Component, Definition>();
+  const components = new Map<Name, Definition>();
 
   traverse(ast, {
     FunctionDeclaration(path) {
@@ -115,10 +115,10 @@ const getDefinitions = (ast: AST, sourcePath: Path) => {
   return components;
 };
 
-export const buildHierarchy = (sourcePath: Path, allDefinitions: Map<Component, Definition>) => {
+export const buildHierarchy = (sourcePath: Path, allDefinitions: Map<Name, Definition>) => {
   const tree = {
     type: 'root',
-    components: {} as Record<Component, any>,
+    components: {} as Record<Name, any>,
   };
 
   for (const [name, definition] of allDefinitions) {
@@ -143,7 +143,7 @@ export const buildHierarchy = (sourcePath: Path, allDefinitions: Map<Component, 
 // 컴포넌트의 내부 구조와 자식 컴포넌트를 처리하는 함수
 export const processComponent = (
   node: Node,
-  allDefinitions: Map<Component, Definition>,
+  allDefinitions: Map<Name, Definition>,
   processedComponents: Set<Key>,
 ) => {
   if (!node) return null;
@@ -267,7 +267,7 @@ const getNodeName = (node: Node) => {
   return 'Unknown';
 };
 
-const getJSXMemberComponent = (node: type.JSXMemberExpression): Component => {
+const getJSXMemberComponent = (node: type.JSXMemberExpression): Name => {
   const object = node.object;
   const property = node.property;
 

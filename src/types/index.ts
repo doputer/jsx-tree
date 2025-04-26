@@ -7,14 +7,14 @@ import type { File } from '@babel/types';
 
 export type AST = ParseResult<File>;
 
-export type Component = string;
+export type Name = string;
 
 export type Path = string;
 
-export type Key = `${Path}::${Component}`;
+export type Key = `${Path}::${Name}`;
 
 export type Definition = {
-  name: Component;
+  name: Name;
   path?: Path;
   node: Node;
 };
