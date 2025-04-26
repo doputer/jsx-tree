@@ -1,26 +1,50 @@
-import { basename } from 'path';
+import { basename } from 'node:path';
 
-import { cyan, yellow } from 'chalk';
+import { cyan, white, yellow } from 'chalk';
 
-import { Node } from '@/types';
+import type { Component } from '@/types';
 
 const log = console.log;
 
-const print = (node: Node, indent = '', isPrevLast = true, isRoot = true) => {
-  const connector = isRoot ? '' : isPrevLast ? '└── ' : '├── ';
-  const name = node.internal ? yellow(node.name) : cyan(node.name);
-  const path = node.internal ? '' : `(${basename(node.path)})`;
+const CONNECTOR_MIDDLE = '├── ';
+const CONNECTOR_LAST = '└── ';
+const INDENT_MIDDLE = '│   ';
+const INDENT_LAST = '    ';
 
-  log(`${indent}${connector}${name} ${path}`.trimEnd());
+const print = (node: Component, indent = '', isPrevLast = true, isRoot = true) => {
+  const connector = isRoot ? '' : isPrevLast ? CONNECTOR_LAST : CONNECTOR_MIDDLE;
+  const label = format(node);
+  const path = node.type === 'COMPONENT' ? `(${basename(node.path)})` : '';
 
-  const values = Object.values(node.children);
+  log(`${indent}${connector}${label} ${path}`.trimEnd());
 
-  values.forEach((child, index) => {
-    const childIndent = isRoot ? '' : indent + (isPrevLast ? '    ' : '│   ');
-    const isLast = values.length - 1 === index;
+  if (node.type === 'COMPONENT' && node.render) {
+    const childIndent = isRoot ? '' : indent + (isPrevLast ? INDENT_LAST : INDENT_MIDDLE);
 
-    print(child, childIndent, isLast, false);
-  });
+    print(node.render, childIndent, true, false);
+  } else if (node.type === 'HTML') {
+    node.children.forEach((child, index, array) => {
+      const childIndent = isRoot ? '' : indent + (isPrevLast ? INDENT_LAST : INDENT_MIDDLE);
+      const isLast = array.length - 1 === index;
+
+      print(child, childIndent, isLast, false);
+    });
+  }
+};
+
+const format = (node: Component) => {
+  switch (node.type) {
+    case 'HTML':
+      return cyan(node.name);
+    case 'COMPONENT':
+      return yellow(node.name);
+    case 'TEXT':
+    case 'EXPRESSION':
+    case 'CHILDREN_PLACEHOLDER':
+      return white(node.value);
+    default:
+      return 'ERROR';
+  }
 };
 
 export default print;
