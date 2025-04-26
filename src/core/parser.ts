@@ -14,7 +14,7 @@ import {
   JSXMemberExpression,
 } from '@babel/types';
 
-import type { AST, Definition, Key, Name, Node, Path, Root, Tree } from '@/types';
+import type { AST, Component, Definition, Key, Name, Node, Path, Root } from '@/types';
 import { parseFile, readFileSync } from '@/utils/file';
 import { resolvePath } from '@/utils/path';
 
@@ -142,13 +142,13 @@ export const buildHierarchy = (sourcePath: Path, allDefinitions: Map<Name, Defin
 
     processedComponents.add(key);
 
-    const children = processComponent(definition.node, allDefinitions, processedComponents);
+    const component = processNode(definition.node, allDefinitions, processedComponents);
 
     tree.components[name] = {
-      type: name,
+      type: 'COMPONENT',
+      name,
       path: definition.path,
-      isComponent: true,
-      children: children ? [children] : [],
+      render: component,
     };
   }
 
@@ -156,20 +156,24 @@ export const buildHierarchy = (sourcePath: Path, allDefinitions: Map<Name, Defin
 };
 
 // 컴포넌트의 내부 구조와 자식 컴포넌트를 처리하는 함수
-const processComponent = (
+const processNode = (
   node: Node,
   allDefinitions: Map<Name, Definition>,
   processedComponents: Set<Key>,
-) => {
+): Component | null => {
   if (!node) return null;
 
   const nodeName = getNodeName(node);
-  const treeNode: Tree = {
-    type: nodeName,
+  const definition = allDefinitions.get(nodeName);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const treeNode: any = {
+    type: definition ? 'COMPONENT' : 'HTML',
+    name: nodeName,
+    ...(definition ? { path: definition.path } : {}),
     children: [],
   };
 
-  if ('children' in node && node.children) {
+  if ('children' in node && node.children && 'children' in treeNode) {
     for (const child of node.children) {
       // 텍스트 노드 처리
       if (isJSXText(child)) {
@@ -210,9 +214,9 @@ const processComponent = (
 
           // if (processedComponents.has(key)) {
           //   treeNode.children.push({
-          //     type: childNodeName,
+          //     type: 'COMPONENT',
+          //     name: childNodeName,
           //     path: definition.path,
-          //     isComponent: true,
           //     render: {
           //       type: 'CIRCULAR_REFERENCE',
           //       value: childNodeName,
@@ -226,45 +230,46 @@ const processComponent = (
           newProcessedComponents.add(key);
 
           // 자식 컴포넌트의 자식 요소들 처리
-          const childChildren = processComponent(child, allDefinitions, newProcessedComponents);
+          const childComponent = processNode(child, allDefinitions, newProcessedComponents);
 
           // 컴포넌트 정의에서 렌더링 구조 가져오기
-          let render = null;
+          let render: Component | null = null;
+
           if (definition.node) {
-            render = processComponent(definition.node, allDefinitions, newProcessedComponents);
+            render = processNode(definition.node, allDefinitions, newProcessedComponents);
 
             // children placeholder 찾아서 실제 자식으로 대체
-            if (render) {
+            if (render && 'children' in render) {
               const childrenIndex = render.children.findIndex(
                 item => item.type === 'CHILDREN_PLACEHOLDER',
               );
 
-              if (childrenIndex !== -1) {
+              if (childrenIndex !== -1 && childComponent && 'children' in childComponent) {
                 render = { ...render, children: [...render.children] };
-                render.children.splice(childrenIndex, 1, ...(childChildren?.children || []));
+                render.children.splice(childrenIndex, 1, ...(childComponent?.children || []));
               }
             }
           }
 
           treeNode.children.push({
-            type: childNodeName,
+            type: 'COMPONENT',
+            name: childNodeName,
             path: definition.path,
-            isComponent: true,
             render,
           });
         }
 
         // 일반 HTML 요소
         else {
-          const childNode = processComponent(child, allDefinitions, processedComponents);
-          if (childNode) treeNode.children.push(childNode);
+          const childTreeNode = processNode(child, allDefinitions, processedComponents);
+          if (childTreeNode) treeNode.children.push(childTreeNode);
         }
       }
 
       // JSX Fragment
       else if (isJSXFragment(child)) {
-        const childNode = processComponent(child, allDefinitions, processedComponents);
-        if (childNode) treeNode.children.push(childNode);
+        const childTreeNode = processNode(child, allDefinitions, processedComponents);
+        if (childTreeNode) treeNode.children.push(childTreeNode);
       }
     }
   }

@@ -13,7 +13,7 @@ export type Key = `${Path}::${Name}`;
 
 export type Definition = {
   name: Name;
-  path?: Path;
+  path: Path;
   node: Node;
 };
 
@@ -24,17 +24,37 @@ export type Root = {
   components: Record<Name, Component | null>;
 };
 
-export type Tree = {
-  type: string;
-  path?: Path;
+export type Component = HtmlNode | ComponentNode | TextNode | PlaceholderNode | ExpressionNode;
+
+type HtmlNode = {
+  type: 'HTML';
+  name: Name;
   children: Component[];
 };
 
-export type Component = {
-  type: string;
-  path?: Path;
-  children?: Component[];
-  isComponent?: boolean;
-  render?: Component | null;
-  value?: string;
+type ComponentNode = {
+  type: 'COMPONENT';
+  name: Name;
+  path: Path;
+  render: Component | null;
 };
+
+type TextNode = {
+  type: 'TEXT';
+  value: string;
+};
+
+type PlaceholderNode = {
+  type: 'CHILDREN_PLACEHOLDER';
+  value: 'children';
+};
+
+type ExpressionNode = {
+  type: 'EXPRESSION';
+  value: string;
+};
+
+// type CircularReferenceNode = {
+//   type: 'CIRCULAR_REFERENCE';
+//   value: string;
+// };
