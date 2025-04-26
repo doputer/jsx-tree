@@ -7,39 +7,40 @@ import type { AST, Component, Definition, Key, Node, Path } from '@/types';
 import { parseFile, readFileSync } from '@/utils/file';
 import { resolvePath } from '@/utils/path';
 
-export const analyzeFile = (
-  path: Path,
-  analyzedFiles: Map<Path, Record<Component, Definition>>,
-  allDefinitions: Map<Component, Definition>,
-) => {
-  if (analyzedFiles.has(path)) return analyzedFiles.get(path) || {};
+export const analyzeFile = (entry: Path) => {
+  const analyzedFiles = new Set<Path>();
+  const allDefinitions = new Map<Component, Definition>();
 
-  try {
-    const code = readFileSync(path);
-    const ast = parseFile(code);
-    const importMap = getImportMap(ast, path);
-    const definitions = getDefinitions(ast, path);
+  const traverseFile = (path: Path) => {
+    if (analyzedFiles.has(path)) return;
 
-    analyzedFiles.set(path, definitions);
+    try {
+      const code = readFileSync(path);
+      const ast = parseFile(code);
+      const importPaths = getImportPaths(ast, path);
+      const definitions = getDefinitions(ast, path);
 
-    Object.entries(definitions).forEach(([name, component]) => {
-      allDefinitions.set(name, component);
-    });
+      analyzedFiles.add(path);
 
-    for (const importPath of importMap.values()) {
-      if (analyzedFiles.has(importPath)) continue;
+      definitions.forEach((component, name) => {
+        allDefinitions.set(name, component);
+      });
 
-      analyzeFile(importPath, analyzedFiles, allDefinitions);
+      for (const importPath of importPaths) {
+        traverseFile(importPath);
+      }
+    } catch {
+      console.error('Failed to analyze', path);
     }
+  };
 
-    return allDefinitions;
-  } catch {
-    return {};
-  }
+  traverseFile(entry);
+
+  return allDefinitions;
 };
 
-const getImportMap = (ast: AST, currentPath: Path) => {
-  const map = new Map<Component, Path>();
+const getImportPaths = (ast: AST, currentPath: Path) => {
+  const set = new Set<Path>();
 
   traverse(ast, {
     ImportDeclaration({ node }) {
@@ -50,17 +51,17 @@ const getImportMap = (ast: AST, currentPath: Path) => {
 
       node.specifiers.forEach(spec => {
         if (type.isImportSpecifier(spec) || type.isImportDefaultSpecifier(spec)) {
-          map.set(spec.local.name, resolvedPath);
+          set.add(resolvedPath);
         }
       });
     },
   });
 
-  return map;
+  return set;
 };
 
 const getDefinitions = (ast: AST, sourcePath: Path) => {
-  const components: Record<Component, Definition> = {};
+  const components = new Map<Component, Definition>();
 
   traverse(ast, {
     FunctionDeclaration(path) {
@@ -78,7 +79,7 @@ const getDefinitions = (ast: AST, sourcePath: Path) => {
           },
         });
 
-        components[name] = { name, path: sourcePath, node };
+        components.set(name, { name, path: sourcePath, node });
       }
     },
     VariableDeclarator(path) {
@@ -105,7 +106,7 @@ const getDefinitions = (ast: AST, sourcePath: Path) => {
             });
           }
 
-          components[name] = { name, path: sourcePath, node };
+          components.set(name, { name, path: sourcePath, node });
         }
       }
     },
@@ -120,8 +121,7 @@ export const buildHierarchy = (sourcePath: Path, allDefinitions: Map<Component, 
     components: {} as Record<Component, any>,
   };
 
-  for (const [name, definition] of allDefinitions.entries()) {
-    // for (const [name, definition] of Object.entries(allDefinitions)) {
+  for (const [name, definition] of allDefinitions) {
     // root에 정의되지 않은 컴포넌트는 처리하지 않음
     if (sourcePath !== definition.path) continue;
 
