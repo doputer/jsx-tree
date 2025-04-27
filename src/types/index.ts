@@ -49,7 +49,8 @@ type ComponentNode = {
   type: 'COMPONENT';
   name: Name;
   path: Path;
-  render: Component | null;
+  // FIXME: Component[]는 출력용이고, 기존 트리 구조에서 존재하지 않음
+  render: Component | Component[] | null;
 };
 
 type TextNode = {

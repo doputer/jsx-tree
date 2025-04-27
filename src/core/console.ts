@@ -18,75 +18,34 @@ const defaultOptions: FilterOptions = {
   depth: 0,
 };
 
-const print = (
-  node: Component,
-  indent = '',
-  isPrevLast = true,
-  isRoot = true,
-  depth = 2,
-  options: FilterOptions = defaultOptions,
-) => {
-  if (options.depth && depth > options.depth) {
-    return;
-  }
-
-  if (!isRoot && !shouldShow(node, options)) {
-    if (node.type === 'COMPONENT' && node.render) {
-      print(node.render, indent, isPrevLast, false, depth + 1, options);
-
-      return;
-    } else if (node.type === 'HTML') {
-      node.children.forEach((child, index, array) => {
-        const isLast = array.length - 1 === index;
-
-        print(child, indent, isLast, false, depth + 1, options);
-      });
-
-      return;
-    }
-
-    return;
-  }
-
+const print = (node: Component, indent = '', isPrevLast = true, isRoot = true) => {
   const connector = isRoot ? '' : isPrevLast ? CONNECTOR_LAST : CONNECTOR_MIDDLE;
   const label = format(node);
   const path = node.type === 'COMPONENT' ? `(${basename(node.path)})` : '';
 
   log(`${indent}${connector}${label} ${path}`.trimEnd());
 
-  if (node.type === 'COMPONENT' && node.render) {
-    const childIndent = isRoot ? '' : indent + (isPrevLast ? INDENT_LAST : INDENT_MIDDLE);
-
-    print(node.render, childIndent, true, false, depth + 1, options);
-  } else if (node.type === 'HTML') {
+  if (node.type === 'HTML') {
     node.children.forEach((child, index, array) => {
       const childIndent = isRoot ? '' : indent + (isPrevLast ? INDENT_LAST : INDENT_MIDDLE);
       const isLast = array.length - 1 === index;
 
-      print(child, childIndent, isLast, false, depth + 1, options);
+      print(child, childIndent, isLast, false);
     });
+  } else if (node.type === 'COMPONENT' && node.render) {
+    if (Array.isArray(node.render)) {
+      node.render.forEach((child, index, array) => {
+        const childIndent = isRoot ? '' : indent + (isPrevLast ? INDENT_LAST : INDENT_MIDDLE);
+        const isLast = array.length - 1 === index;
+
+        print(child, childIndent, isLast, false);
+      });
+    } else {
+      const childIndent = isRoot ? '' : indent + (isPrevLast ? INDENT_LAST : INDENT_MIDDLE);
+
+      print(node.render, childIndent, true, false);
+    }
   }
-};
-
-const shouldShow = (node: Component, options: FilterOptions) => {
-  const { componentsOnly, htmlOnly, showText } = options;
-  const { type } = node;
-
-  const isTextType = type === 'TEXT' || type === 'EXPRESSION' || type === 'CHILDREN_PLACEHOLDER';
-
-  if (isTextType) {
-    return !!showText;
-  }
-
-  if (componentsOnly) {
-    return type === 'COMPONENT';
-  }
-
-  if (htmlOnly) {
-    return type === 'HTML';
-  }
-
-  return type === 'COMPONENT' || type === 'HTML' || true;
 };
 
 const format = (node: Component) => {
@@ -112,7 +71,75 @@ const printTree = (root: Component, options: FilterOptions = {}) => {
     mergedOptions.htmlOnly = false;
   }
 
-  print(root, '', true, true, 0, mergedOptions);
+  const filteredRoot = filterNode(root, mergedOptions);
+
+  print(filteredRoot, '', true, true);
+};
+
+const filterNode = (node: Component, options: FilterOptions, depth = 0): Component => {
+  const allChildren = getFilteredChildren(node);
+
+  const flattenChildren = (child: Component, depth: number): Component[] => {
+    const children = getFilteredChildren(child);
+    const shouldDisplay = shouldShow(child, options);
+    const maxDepth = options?.depth ?? 0;
+
+    if ((maxDepth !== 0 && depth > maxDepth) || !shouldDisplay) {
+      return children.flatMap(c => flattenChildren(c, depth + 1));
+    }
+
+    if (children.length > 0) {
+      const flattened = children.flatMap(c => flattenChildren(c, depth + 1));
+
+      if (child.type === 'HTML') {
+        return [{ ...child, children: flattened }];
+      } else if (child.type === 'COMPONENT') {
+        return [{ ...child, render: flattened.length === 1 ? flattened[0] : flattened }];
+      }
+    }
+
+    return [child];
+  };
+
+  const filteredAllChildren = allChildren.flatMap(c => flattenChildren(c, depth + 1));
+
+  if (node.type === 'HTML') {
+    node.children = filteredAllChildren;
+  } else if (node.type === 'COMPONENT') {
+    node.render = filteredAllChildren.length === 1 ? filteredAllChildren[0] : filteredAllChildren;
+  }
+
+  return node;
+};
+
+const getFilteredChildren = (node: Component) => {
+  if (node.type === 'HTML' && node.children && node.children.length > 0) {
+    return node.children;
+  } else if (node.type === 'COMPONENT' && node.render) {
+    return Array.isArray(node.render) ? node.render : [node.render];
+  }
+  return [];
+};
+
+const shouldShow = (node: Component, options: FilterOptions) => {
+  const { componentsOnly, htmlOnly, showText } = options;
+  const { type } = node;
+
+  const isTextType = type === 'TEXT' || type === 'EXPRESSION' || type === 'CHILDREN_PLACEHOLDER';
+
+  if (isTextType) {
+    return !!showText;
+  }
+
+  if (htmlOnly) {
+    return type === 'HTML';
+  }
+
+  if (componentsOnly) {
+    return type === 'COMPONENT';
+  }
+
+  return type === 'HTML' || type === 'COMPONENT' || true;
 };
 
 export default printTree;
