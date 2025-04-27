@@ -1,78 +1,16 @@
-import print from '@/core/console';
-import { getDefinedComponents, getImportMap } from '@/core/parser';
-import type { Component, Key, Link, Node, Path } from '@/types';
-import { parseFile, readFileSync } from '@/utils/file';
-import Queue from '@/utils/queue';
+import printTree from '@/core/console';
+import { analyzeFile, buildHierarchy } from '@/core/parser';
+import { FilterOptions, Path } from '@/types';
 
-const analyzer = (entryPath: Path) => {
-  const queue = new Queue<string>();
-  queue.enqueue(entryPath);
+const analyzer = (entry: Path, options: FilterOptions = {}) => {
+  const allDefinitions = analyzeFile(entry);
+  const tree = buildHierarchy(entry, allDefinitions);
 
-  const visited = new Set<Key>();
-  const compTree = new Map<Key, Node>();
-  const pathImportMap = new Map<Path, Map<Component, Path>>();
-  const pendingLinks: Link[] = [];
+  const components = Object.values(tree.components);
+  const component = components.find(component => component !== null);
 
-  while (!queue.isEmpty()) {
-    const parentPath = queue.dequeue()!;
-    const code = readFileSync(parentPath);
-    const ast = parseFile(code);
-
-    const definedComponents = getDefinedComponents(ast);
-    const importMap = getImportMap(ast, parentPath);
-
-    pathImportMap.set(parentPath, importMap);
-
-    for (const { name: parentName, components } of definedComponents) {
-      const parentKey = `${parentPath}::${parentName}` as const;
-
-      if (visited.has(parentKey)) continue;
-      visited.add(parentKey);
-
-      const node: Node = {
-        name: parentName,
-        path: parentPath,
-        children: {},
-      } satisfies Node;
-
-      compTree.set(parentKey, node);
-
-      for (const childName of components) {
-        pendingLinks.push([parentKey, parentPath, childName]);
-
-        const childPath = importMap.get(childName);
-        if (childPath) {
-          const childKey = `${childPath}::${childName}` as const;
-          if (!visited.has(childKey)) {
-            queue.enqueue(childPath);
-          }
-        }
-      }
-    }
-  }
-
-  for (const [parentKey, parentPath, childName] of pendingLinks) {
-    const parentNode = compTree.get(parentKey);
-    if (!parentNode) continue;
-
-    const directKey = `${parentPath}::${childName}` as const;
-    const importMap = pathImportMap.get(parentPath);
-    const importPath = importMap?.get(childName);
-    const importKey = importPath ? (`${importPath}::${childName}` as const) : null;
-
-    const childNode = compTree.get(directKey) ?? (importKey ? compTree.get(importKey) : undefined);
-    if (compTree.has(directKey) && childNode) childNode.internal = true;
-
-    if (childNode) {
-      parentNode.children[childName] = childNode;
-    }
-  }
-
-  const root = compTree.values().next().value;
-
-  if (root) {
-    print(root);
-  }
+  if (component) printTree(component, options);
+  else console.error('No valid component found');
 };
 
 export default analyzer;
