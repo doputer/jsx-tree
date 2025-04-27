@@ -234,7 +234,7 @@ const processNode = (node: Node, allDefinitions: Map<Name, Definition>): Compone
   return htmlNode;
 };
 
-const getJSXName = (node: Node) => {
+export const getJSXName = (node: Node) => {
   if (isJSXFragment(node)) return 'Fragment';
 
   if (isJSXElement(node) && node.openingElement.name) {
