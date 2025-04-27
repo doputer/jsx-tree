@@ -5,6 +5,7 @@
     "moduleResolution": "Node",
     "esModuleInterop": true,
     "strict": true,
+    "declaration": true,
     "skipLibCheck": true,
     "baseUrl": "./src",
     "paths": {
