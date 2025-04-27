@@ -1,9 +1,27 @@
 {
   "name": "jsx-tree",
-  "version": "0.0.1",
+  "version": "0.1.0",
+  "private": false,
   "description": "Analyze JSX files as a tree structure",
+  "keywords": [
+    "jsx",
+    "tsx",
+    "ast",
+    "tree",
+    "parser",
+    "analyzer"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/doputer/jsx-tree"
+  },
   "license": "MIT",
-  "main": "index.ts",
+  "author": {
+    "name": "Kim Dohyeon",
+    "email": "swputer@gmail.com"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
     "jsx-tree": "bin/cli.js"
   },
@@ -22,7 +40,9 @@
     "@babel/traverse": "^7.27.0",
     "@types/babel__traverse": "^7.20.7",
     "chalk": "^4.1.2",
-    "enhanced-resolve": "^5.18.1"
+    "commander": "^13.1.0",
+    "enhanced-resolve": "^5.18.1",
+    "tsconfig-paths": "^4.2.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.1",
@@ -37,7 +57,6 @@
     "prettier-plugin-packagejson": "^2.5.10",
     "ts-node": "^10.9.2",
     "tsc-alias": "^1.8.15",
-    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.8.3"
   }
 }
