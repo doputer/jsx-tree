@@ -1,8 +1,25 @@
 {
   "name": "jsx-tree",
   "version": "0.0.1",
+  "private": false,
   "description": "Analyze JSX files as a tree structure",
+  "keywords": [
+    "jsx",
+    "tsx",
+    "ast",
+    "tree",
+    "parser",
+    "analyzer"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/doputer/jsx-tree"
+  },
   "license": "MIT",
+  "author": {
+    "name": "KIMDOHYEON",
+    "email": "swputer@gmail.com"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
