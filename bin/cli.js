@@ -25,9 +25,10 @@ program
   .addHelpText('beforeAll', logo)
   .argument('[file]', 'Path to the entry file (optional if using -e or default file exists)')
   .option('-e, --entry <file>', 'Entry file to analyze (default: ./index.jsx or ./index.tsx)')
-  .option('-c, --components-only', 'Show only component nodes in the tree (filters out HTML tags)')
-  .option('-h, --html-only', 'Show only HTML tag nodes in the tree (filters out components)')
-  .option('-t, --show-text', 'Include text nodes in the output (default: false)')
+  .option('-c, --components-only', 'Show only component nodes in the tree (default: false)')
+  .option('-h, --html-only', 'Show only HTML tag nodes in the tree (default: false)')
+  .option('-t, --show-text', 'Show text nodes in the tree (default: false)')
+  .option('-p, --show-path', 'Show the full file path for each node in the tree (default: false)')
   .option('-d, --depth <depth>', 'Limit the tree display to specified depth level');
 
 program.action((entryArg, options) => {

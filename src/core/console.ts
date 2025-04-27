@@ -1,4 +1,4 @@
-import { basename } from 'node:path';
+import { basename, dirname } from 'node:path';
 
 import { cyan, white, yellow } from 'chalk';
 
@@ -15,13 +15,15 @@ const defaultOptions: FilterOptions = {
   componentsOnly: false,
   htmlOnly: false,
   showText: false,
+  showPath: false,
   depth: 0,
-};
+} satisfies Required<FilterOptions>;
 
 const print = (node: Component, indent = '', isPrevLast = true, isRoot = true) => {
   const connector = isRoot ? '' : isPrevLast ? CONNECTOR_LAST : CONNECTOR_MIDDLE;
   const label = format(node);
-  const path = node.type === 'COMPONENT' ? `(${basename(node.path)})` : '';
+  const path =
+    'path' in node && node.path ? `(${basename(dirname(node.path))}/${basename(node.path)})` : '';
 
   log(`${indent}${connector}${label} ${path}`.trimEnd());
 
@@ -70,6 +72,8 @@ const filterNode = (node: Component, options: FilterOptions, depth = 0): Compone
     const children = getFilteredChildren(child);
     const shouldDisplay = shouldShow(child, options);
     const maxDepth = options?.depth ?? 0;
+
+    if (child.type === 'COMPONENT' && !options.showPath) child.path = '';
 
     if ((maxDepth !== 0 && depth > maxDepth) || !shouldDisplay) {
       return children.flatMap(child => flattenChildren(child, depth + 1));

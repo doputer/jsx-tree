@@ -73,5 +73,6 @@ export type FilterOptions = {
   componentsOnly?: boolean;
   htmlOnly?: boolean;
   showText?: boolean;
+  showPath?: boolean;
   depth?: number;
 };
