@@ -26,14 +26,16 @@ program
 
 program
   .argument('[file]', 'Path to the entry file (optional if using -e or default file exists)')
-  .option('-e, --entry <file>', 'Path to the entry file (default: ./index.jsx or ./index.tsx)');
+  .option('-f, --entry <file>', 'Path to the entry file (default: ./index.jsx or ./index.tsx)');
 
 program
-  .option('-c, --components-only', 'Show only component nodes in the tree (default: false)')
-  .option('-H, --html-only', 'Show only HTML tag nodes in the tree (default: false)')
-  .option('-t, --show-text', 'Show text nodes in the tree (default: false)')
-  .option('-p, --show-path', 'Show the full file path for each node in the tree (default: false)')
-  .option('-d, --depth <depth>', 'Limit the tree display to specified depth level');
+  .option('-c, --components-only', 'Display only component nodes (default: false)')
+  .option('-H, --html-only', 'Display only HTML tag nodes (default: false)')
+  .option('-t, --show-text', 'Display text nodes (default: false)')
+  .option('-p, --show-path', 'Display the file path for each node (default: false)')
+  .option('-i, --include-tags <tags...>', 'Include only specified tags or components')
+  .option('-e, --exclude-tags <tags...>', 'Exclude specified tags or components')
+  .option('-d, --depth <depth>', 'Limit the display depth of the tree');
 
 program.action((entryArg, options) => {
   const cwd = process.cwd();

@@ -16,6 +16,8 @@ const defaultOptions: FilterOptions = {
   htmlOnly: false,
   showText: false,
   showPath: false,
+  includeTags: [],
+  excludeTags: [],
   depth: 0,
 } satisfies Required<FilterOptions>;
 
@@ -107,21 +109,32 @@ const getFilteredChildren = (node: Component) => {
 };
 
 const shouldShow = (node: Component, options: FilterOptions) => {
-  const { componentsOnly, htmlOnly, showText } = options;
+  const { componentsOnly, htmlOnly, showText, includeTags, excludeTags } = options;
   const { type } = node;
-
   const isTextType = type === 'TEXT' || type === 'EXPRESSION' || type === 'CHILDREN_PLACEHOLDER';
 
   if (isTextType) {
     return !!showText;
   }
 
-  if (htmlOnly) {
-    return type === 'HTML';
+  if (htmlOnly && type !== 'HTML') {
+    return false;
   }
 
-  if (componentsOnly) {
-    return type === 'COMPONENT';
+  if (componentsOnly && type !== 'COMPONENT') {
+    return false;
+  }
+
+  if (includeTags && includeTags.length > 0) {
+    if (!includeTags.includes(node.name)) {
+      return false;
+    }
+  }
+
+  if (excludeTags && excludeTags.length > 0) {
+    if (excludeTags.includes(node.name)) {
+      return false;
+    }
   }
 
   return type === 'HTML' || type === 'COMPONENT' || true;

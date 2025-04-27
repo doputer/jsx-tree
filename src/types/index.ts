@@ -74,5 +74,7 @@ export type FilterOptions = {
   htmlOnly?: boolean;
   showText?: boolean;
   showPath?: boolean;
+  includeTags?: string[];
+  excludeTags?: string[];
   depth?: number;
 };
