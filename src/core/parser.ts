@@ -14,7 +14,7 @@ import {
   JSXMemberExpression,
 } from '@babel/types';
 
-import type { AST, Component, Definition, Key, Name, Node, Path, Root } from '@/types';
+import type { AST, Component, Definition, Name, Node, Path, Root } from '@/types';
 import { parseFile, readFileSync } from '@/utils/file';
 import { resolvePath } from '@/utils/path';
 
@@ -137,18 +137,11 @@ export const buildHierarchy = (sourcePath: Path, allDefinitions: Map<Name, Defin
     // root에 정의되지 않은 컴포넌트는 처리하지 않음
     if (sourcePath !== definition.path) continue;
 
-    const key = `${definition.path}::${name}` as const;
-    const processedComponents = new Set<Key>();
-
-    processedComponents.add(key);
-
-    const component = processNode(definition.node, allDefinitions);
-
     tree.components[name] = {
       type: 'COMPONENT',
       name,
       path: definition.path,
-      render: component,
+      render: processNode(definition.node, allDefinitions),
     };
   }
 
@@ -207,12 +200,12 @@ const processNode = (node: Node, allDefinitions: Map<Name, Definition>): Compone
     let render = definition.node ? processNode(definition.node, allDefinitions) : null;
 
     // render 내부에 CHILDREN_PLACEHOLDER가 있을 경우, 실제 children으로 대체
-    if (render && 'children' in render) {
+    if (render && 'children' in render && Array.isArray(render.children)) {
       const idx = render.children.findIndex(item => item.type === 'CHILDREN_PLACEHOLDER');
 
       if (idx !== -1) {
         render = { ...render, children: [...render.children] };
-        render.children.splice(idx, 1, ...childComponents);
+        if (Array.isArray(render.children)) render.children.splice(idx, 1, ...childComponents);
       }
     }
 

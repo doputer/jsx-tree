@@ -25,26 +25,13 @@ const print = (node: Component, indent = '', isPrevLast = true, isRoot = true) =
 
   log(`${indent}${connector}${label} ${path}`.trimEnd());
 
-  if (node.type === 'HTML') {
+  if ((node.type === 'HTML' || node.type === 'COMPONENT') && Array.isArray(node.children)) {
     node.children.forEach((child, index, array) => {
       const childIndent = isRoot ? '' : indent + (isPrevLast ? INDENT_LAST : INDENT_MIDDLE);
       const isLast = array.length - 1 === index;
 
       print(child, childIndent, isLast, false);
     });
-  } else if (node.type === 'COMPONENT' && node.render) {
-    if (Array.isArray(node.render)) {
-      node.render.forEach((child, index, array) => {
-        const childIndent = isRoot ? '' : indent + (isPrevLast ? INDENT_LAST : INDENT_MIDDLE);
-        const isLast = array.length - 1 === index;
-
-        print(child, childIndent, isLast, false);
-      });
-    } else {
-      const childIndent = isRoot ? '' : indent + (isPrevLast ? INDENT_LAST : INDENT_MIDDLE);
-
-      print(node.render, childIndent, true, false);
-    }
   }
 };
 
@@ -73,7 +60,7 @@ const printTree = (root: Component, options: FilterOptions = {}) => {
 
   const filteredRoot = filterNode(root, mergedOptions);
 
-  print(filteredRoot, '', true, true);
+  print(filteredRoot);
 };
 
 const filterNode = (node: Component, options: FilterOptions, depth = 0): Component => {
@@ -85,29 +72,23 @@ const filterNode = (node: Component, options: FilterOptions, depth = 0): Compone
     const maxDepth = options?.depth ?? 0;
 
     if ((maxDepth !== 0 && depth > maxDepth) || !shouldDisplay) {
-      return children.flatMap(c => flattenChildren(c, depth + 1));
+      return children.flatMap(child => flattenChildren(child, depth + 1));
     }
 
     if (children.length > 0) {
-      const flattened = children.flatMap(c => flattenChildren(c, depth + 1));
+      const flattened = children.flatMap(child => flattenChildren(child, depth + 1));
 
-      if (child.type === 'HTML') {
+      if (child.type === 'HTML' || child.type === 'COMPONENT') {
         return [{ ...child, children: flattened }];
-      } else if (child.type === 'COMPONENT') {
-        return [{ ...child, render: flattened.length === 1 ? flattened[0] : flattened }];
       }
     }
 
     return [child];
   };
 
-  const filteredAllChildren = allChildren.flatMap(c => flattenChildren(c, depth + 1));
+  const filteredAllChildren = allChildren.flatMap(child => flattenChildren(child, depth + 1));
 
-  if (node.type === 'HTML') {
-    node.children = filteredAllChildren;
-  } else if (node.type === 'COMPONENT') {
-    node.render = filteredAllChildren.length === 1 ? filteredAllChildren[0] : filteredAllChildren;
-  }
+  if (node.type === 'HTML' || node.type === 'COMPONENT') node.children = filteredAllChildren;
 
   return node;
 };
