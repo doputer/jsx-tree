@@ -50,6 +50,8 @@ type ComponentNode = {
   name: Name;
   path: Path;
   render: Component | null;
+  // FIXME: COMPONENT의 children은 출력용이고, 기존 트리 구조에서 존재하지 않음
+  children?: Component[];
 };
 
 type TextNode = {
@@ -65,4 +67,14 @@ type PlaceholderNode = {
 type ExpressionNode = {
   type: 'EXPRESSION';
   value: string;
+};
+
+export type FilterOptions = {
+  componentsOnly?: boolean;
+  htmlOnly?: boolean;
+  showText?: boolean;
+  showPath?: boolean;
+  includeTags?: string[];
+  excludeTags?: string[];
+  depth?: number;
 };
