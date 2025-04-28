@@ -1,5 +1,6 @@
+import { analyzeFile } from '@/core/collector';
 import printTree from '@/core/console';
-import { analyzeFile, buildHierarchy } from '@/core/parser';
+import { buildHierarchy } from '@/core/parser';
 import { FilterOptions, Path } from '@/types';
 
 const analyzer = (entry: Path, options: FilterOptions = {}) => {
