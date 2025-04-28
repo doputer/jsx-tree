@@ -93,6 +93,12 @@ const getDefinitions = (ast: AST, sourcePath: Path) => {
   const components = new Map<Name, Definition>();
 
   traverse(ast, {
+    JSXElement(path) {
+      path.node.extra = { ...(path.node.extra || {}), sourcePath };
+    },
+    JSXFragment(path) {
+      path.node.extra = { ...(path.node.extra || {}), sourcePath };
+    },
     FunctionDeclaration(path) {
       const name = path.node.id?.name;
 
