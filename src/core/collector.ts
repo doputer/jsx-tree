@@ -4,6 +4,7 @@ import {
   isFunctionExpression,
   isIdentifier,
   isImportDefaultSpecifier,
+  isImportNamespaceSpecifier,
   isImportSpecifier,
   isJSXElement,
   isJSXFragment,
@@ -56,10 +57,32 @@ const getImportPaths = (ast: AST, currentPath: Path) => {
       if (!resolvedPath) return;
 
       node.specifiers.forEach(spec => {
-        if (isImportSpecifier(spec) || isImportDefaultSpecifier(spec)) {
+        if (
+          isImportSpecifier(spec) ||
+          isImportDefaultSpecifier(spec) ||
+          isImportNamespaceSpecifier(spec)
+        ) {
           set.add(resolvedPath);
         }
       });
+    },
+    ExportNamedDeclaration({ node }) {
+      if (!node.source) return;
+
+      const exportSource = node.source.value;
+      const resolvedPath = resolvePath(currentPath, exportSource);
+
+      if (resolvedPath) {
+        set.add(resolvedPath);
+      }
+    },
+    ExportAllDeclaration({ node }) {
+      const exportSource = node.source.value;
+      const resolvedPath = resolvePath(currentPath, exportSource);
+
+      if (resolvedPath) {
+        set.add(resolvedPath);
+      }
     },
   });
 
