@@ -69,7 +69,7 @@ const processNode = (node: Node, allDefinitions: Map<Name, Definition>): Compone
 
   // JSX Element 처리
   const name = getJSXName(node);
-  const definition = allDefinitions.get(name);
+  const definition = allDefinitions.get(name.split('.').at(-1)!);
 
   if (definition) {
     const childComponents: Component[] = [];
