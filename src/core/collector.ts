@@ -10,13 +10,14 @@ import {
   isJSXFragment,
 } from '@babel/types';
 
-import type { AST, Definition, Name, Node, Path } from '@/types';
+import type { AST, Definition, Key, Name, Node, Path } from '@/types';
 import { parseFile, readFileSync } from '@/utils/file';
 import { resolvePath } from '@/utils/path';
 
 export const analyzeFile = (entry: Path) => {
   const analyzedFiles = new Set<Path>();
-  const allDefinitions = new Map<Name, Definition>();
+  const allImports = new Map<Key, Path>();
+  const allDefinitions = new Map<Key, Definition>();
 
   const traverseFile = (path: Path) => {
     if (analyzedFiles.has(path)) return;
@@ -24,14 +25,13 @@ export const analyzeFile = (entry: Path) => {
     try {
       const code = readFileSync(path);
       const ast = parseFile(code);
-      const importPaths = getImportPaths(ast, path);
+      const { set: importPaths, map: importMaps } = getImportPaths(ast, path);
       const definitions = getDefinitions(ast, path);
 
       analyzedFiles.add(path);
 
-      definitions.forEach((component, name) => {
-        allDefinitions.set(name, component);
-      });
+      importMaps.forEach((value, key) => allImports.set(key, value));
+      definitions.forEach((component, name) => allDefinitions.set(`${path}::${name}`, component));
 
       for (const importPath of importPaths) {
         traverseFile(importPath);
@@ -43,11 +43,12 @@ export const analyzeFile = (entry: Path) => {
 
   traverseFile(entry);
 
-  return allDefinitions;
+  return { allImports, allDefinitions };
 };
 
 const getImportPaths = (ast: AST, currentPath: Path) => {
   const set = new Set<Path>();
+  const map = new Map<Key, Path>();
 
   traverse(ast, {
     ImportDeclaration({ node }) {
@@ -63,6 +64,9 @@ const getImportPaths = (ast: AST, currentPath: Path) => {
           isImportNamespaceSpecifier(spec)
         ) {
           set.add(resolvedPath);
+
+          // Import Origin :: Import Name -> Import Destination
+          map.set(`${currentPath}::${spec.local.name}`, resolvedPath);
         }
       });
     },
@@ -86,7 +90,7 @@ const getImportPaths = (ast: AST, currentPath: Path) => {
     },
   });
 
-  return set;
+  return { set, map };
 };
 
 const getDefinitions = (ast: AST, sourcePath: Path) => {
@@ -94,10 +98,10 @@ const getDefinitions = (ast: AST, sourcePath: Path) => {
 
   traverse(ast, {
     JSXElement(path) {
-      path.node.extra = { ...(path.node.extra || {}), sourcePath };
+      path.node.extra = { ...(path.node.extra || {}), originPath: sourcePath };
     },
     JSXFragment(path) {
-      path.node.extra = { ...(path.node.extra || {}), sourcePath };
+      path.node.extra = { ...(path.node.extra || {}), originPath: sourcePath };
     },
     FunctionDeclaration(path) {
       const name = path.node.id?.name;
