@@ -17,13 +17,13 @@ export const buildHierarchy = (sourcePath: Path, context: Context) => {
     components: {},
   };
 
-  for (const [name, definition] of context.allDefinitions) {
+  for (const [, definition] of context.allDefinitions) {
     // root에 정의되지 않은 컴포넌트는 처리하지 않음
     if (sourcePath !== definition.path) continue;
 
-    tree.components[name] = {
+    tree.components[definition.name] = {
       type: 'COMPONENT',
-      name,
+      name: definition.name,
       path: definition.path,
       render: processNode(definition.node, context),
     };

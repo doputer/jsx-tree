@@ -5,7 +5,6 @@ import { FilterOptions, Path } from '@/types';
 
 const analyzer = (entry: Path, options: FilterOptions = {}) => {
   const context = analyzeFile(entry);
-
   const tree = buildHierarchy(entry, context);
 
   const components = Object.values(tree.components);
