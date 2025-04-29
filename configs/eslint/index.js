@@ -1,3 +1,5 @@
 module.exports = {
-  extends: [...['./base.js', './import.js'].map(require.resolve)],
+  extends: [
+    ...['./base.js', './javascript.js', './typescript.js', './import.js'].map(require.resolve),
+  ],
 };
