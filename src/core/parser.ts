@@ -9,23 +9,23 @@ import {
   JSXMemberExpression,
 } from '@babel/types';
 
-import type { Component, Definition, Name, Node, Path, Root } from '@/types';
+import type { Component, Context, Definition, Name, Node, Path, Root } from '@/types';
 
-export const buildHierarchy = (sourcePath: Path, allDefinitions: Map<Name, Definition>) => {
+export const buildHierarchy = (sourcePath: Path, context: Context) => {
   const tree: Root = {
     type: 'root',
     components: {},
   };
 
-  for (const [name, definition] of allDefinitions) {
+  for (const [, definition] of context.allDefinitions) {
     // root에 정의되지 않은 컴포넌트는 처리하지 않음
     if (sourcePath !== definition.path) continue;
 
-    tree.components[name] = {
+    tree.components[definition.name] = {
       type: 'COMPONENT',
-      name,
+      name: definition.name,
       path: definition.path,
-      render: processNode(definition.node, allDefinitions),
+      render: processNode(definition.node, context),
     };
   }
 
@@ -33,7 +33,7 @@ export const buildHierarchy = (sourcePath: Path, allDefinitions: Map<Name, Defin
 };
 
 // 컴포넌트의 내부 구조와 자식 컴포넌트를 처리하는 함수
-const processNode = (node: Node, allDefinitions: Map<Name, Definition>): Component | null => {
+const processNode = (node: Node, context: Context): Component | null => {
   if (!node) return null;
 
   // JSX Text 처리
@@ -69,19 +69,26 @@ const processNode = (node: Node, allDefinitions: Map<Name, Definition>): Compone
 
   // JSX Element 처리
   const name = getJSXName(node);
-  const definition = allDefinitions.get(name.split('.').at(-1)!);
+  const basename = getJSXBaseName(name);
+  const originPath = node.extra?.originPath;
+  const destinationPath = context.allImports.get(`${originPath}::${basename}`);
+
+  let definition: Definition | undefined;
+
+  if (destinationPath) definition = context.allDefinitions.get(`${destinationPath}::${basename}`);
+  else if (originPath) definition = context.allDefinitions.get(`${originPath}::${basename}`);
 
   if (definition) {
     const childComponents: Component[] = [];
 
     if ('children' in node && node.children) {
       for (const child of node.children) {
-        const childComponent = processNode(child, allDefinitions);
+        const childComponent = processNode(child, context);
         if (childComponent) childComponents.push(childComponent);
       }
     }
 
-    let render = definition.node ? processNode(definition.node, allDefinitions) : null;
+    let render = definition.node ? processNode(definition.node, context) : null;
 
     // render 내부에 CHILDREN_PLACEHOLDER가 있을 경우, 실제 children으로 대체
     if (render && 'children' in render && Array.isArray(render.children)) {
@@ -110,13 +117,15 @@ const processNode = (node: Node, allDefinitions: Map<Name, Definition>): Compone
 
   if ('children' in node && node.children) {
     for (const child of node.children) {
-      const childComponent = processNode(child, allDefinitions);
+      const childComponent = processNode(child, context);
       if (childComponent) htmlNode.children.push(childComponent);
     }
   }
 
   return htmlNode;
 };
+
+const getJSXBaseName = (name: Name) => name.split('.').at(-1);
 
 const getJSXName = (node: Node) => {
   if (isJSXFragment(node)) return 'Fragment';
