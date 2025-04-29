@@ -24,6 +24,11 @@ export type Definition = {
   node: Node;
 };
 
+export type Context = {
+  allImports: Map<Key, Path>;
+  allDefinitions: Map<Key, Definition>;
+};
+
 export type Node =
   | JSXText
   | JSXElement
