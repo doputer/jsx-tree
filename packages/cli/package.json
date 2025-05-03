@@ -2,7 +2,7 @@
   "name": "@jsx-tree/cli",
   "version": "0.1.0",
   "private": false,
-  "description": "Analyze JSX files as a tree structure",
+  "description": "CLI tool for visualizing JSX/TSX component trees in the terminal",
   "keywords": [
     "jsx",
     "tsx",
