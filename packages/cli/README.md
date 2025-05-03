@@ -1,4 +1,4 @@
-## JSX-Tree
+## @jsx-tree/cli
 
 A powerful tool to parse and visualize JSX/TSX files in a tree structure.
 
@@ -16,20 +16,16 @@ A powerful tool to parse and visualize JSX/TSX files in a tree structure.
 
 ```bash
 # Install globally
-npm install -g jsx-tree
+npm install -g @jsx-tree/cli
 
 # Or use npx directly
-npx jsx-tree [options] [file]
+npx @jsx-tree/cli [options] [file]
 ```
 
 ### Usage
 
 ```bash
-# Basic usage
 jsx-tree path/to/your-component.jsx
-
-# Alternative command
-jt path/to/your-component.jsx
 ```
 
 ### Options
@@ -82,7 +78,3 @@ Exclude div and span tags:
 ```bash
 jsx-tree --exclude-tags div span src/layout/Main.jsx
 ```
-
-### Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
