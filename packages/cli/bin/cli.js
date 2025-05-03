@@ -1,28 +1,17 @@
 #!/usr/bin/env node
 
-const { existsSync, readFileSync } = require('node:fs');
-const { resolve } = require('node:path');
-const { yellow } = require('chalk');
-const { program } = require('commander');
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import chalk from 'chalk';
+import { program } from 'commander';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(readFileSync(resolve(__dirname, '../package.json'), 'utf-8'));
 const log = console.log;
-const warn = message => console.log(yellow(message));
+const warn = message => console.log(chalk.yellow(message));
 
-const logo = `
-     ██╗███████╗██╗  ██╗    ████████╗██████╗ ███████╗███████╗
-     ██║██╔════╝╚██╗██╔╝    ╚══██╔══╝██╔══██╗██╔════╝██╔════╝
-     ██║███████╗ ╚███╔╝        ██║   ██████╔╝█████╗  █████╗  
-██   ██║╚════██║ ██╔██╗        ██║   ██╔══██╗██╔══╝  ██╔══╝  
-╚█████╔╝███████║██╔╝ ██╗       ██║   ██║  ██║███████╗███████╗
- ╚════╝ ╚══════╝╚═╝  ╚═╝       ╚═╝   ╚═╝  ╚═╝╚══════╝╚══════╝
-`;
-
-program
-  .name(pkg.name)
-  .description(pkg.description)
-  .version(pkg.version)
-  .addHelpText('beforeAll', logo);
+program.name(pkg.name).description(pkg.description).version(pkg.version);
 
 program
   .argument('[file]', 'Path to the entry file (optional if using -e or default file exists)')
@@ -53,7 +42,7 @@ program.action((entryArg, options) => {
     process.exit(1);
   }
 
-  require('../dist/lib/analyzer.js').default(entry, options);
+  import('../dist/index.js').then(module => module.default(entry, options));
 });
 
 program.parse(process.argv);

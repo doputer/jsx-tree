@@ -1,6 +1,6 @@
 {
-  "name": "jsx-tree",
-  "version": "0.1.2",
+  "name": "@jsx-tree/cli",
+  "version": "0.1.0",
   "private": false,
   "description": "Analyze JSX files as a tree structure",
   "keywords": [
@@ -21,8 +21,8 @@
     "email": "swputer@gmail.com"
   },
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/src/index.d.ts",
   "bin": {
     "jsx-tree": "bin/cli.js"
   },
@@ -32,13 +32,11 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc && tsc-alias"
+    "build": "rollup -c"
   },
   "dependencies": {
+    "@jsx-tree/core": "^0.1.0",
     "chalk": "^4.1.2",
     "commander": "^13.1.0"
-  },
-  "devDependencies": {
-    "@jsx-tree/core": "workspace:^"
   }
 }
