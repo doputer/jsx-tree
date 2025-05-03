@@ -1,8 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { CachedInputFileSystem, ResolverFactory } from 'enhanced-resolve';
+import enhancedResolve from 'enhanced-resolve';
 import { loadConfig } from 'tsconfig-paths';
+
+const { ResolverFactory, CachedInputFileSystem } = enhancedResolve;
 
 let resolverInstance: ReturnType<typeof ResolverFactory.createResolver> | null = null;
 

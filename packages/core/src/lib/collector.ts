@@ -1,4 +1,4 @@
-import traverse from '@babel/traverse';
+import traverseCJS from '@babel/traverse';
 import {
   isArrowFunctionExpression,
   isFunctionExpression,
@@ -13,6 +13,10 @@ import {
 import type { AST, Definition, Key, Name, Node, Path } from '@/types';
 import { parseFile, readFileSync } from '@/utils/file';
 import { resolvePath } from '@/utils/path';
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
+const traverse = traverseCJS.default as typeof traverseCJS;
 
 export const analyzeFile = (entry: Path) => {
   const analyzedFiles = new Set<Path>();
@@ -36,7 +40,9 @@ export const analyzeFile = (entry: Path) => {
       for (const importPath of importPaths) {
         traverseFile(importPath);
       }
-    } catch {
+    } catch (error) {
+      console.log(error);
+
       console.error('Failed to analyze', path);
     }
   };
