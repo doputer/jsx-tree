@@ -1,22 +1,18 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "CommonJS",
+    "module": "ESNext",
     "moduleResolution": "Node",
     "esModuleInterop": true,
     "strict": true,
     "declaration": true,
     "skipLibCheck": true,
-    "baseUrl": "./src",
+    "baseUrl": ".",
     "paths": {
       "@/*": [
-        "*"
+        "./packages/core/src/*",
+        "./packages/cli/src/*"
       ]
     },
-    "rootDir": "src",
-    "outDir": "dist"
   },
-  "include": [
-    "src"
-  ]
 }

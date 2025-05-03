@@ -1,8 +1,8 @@
 import { basename, dirname } from 'node:path';
 
-import { cyan, white, yellow } from 'chalk';
+import chalk from 'chalk';
 
-import type { Component, FilterOptions } from '@/types';
+import type { Component, FilterOptions } from '@jsx-tree/core';
 
 const log = console.log;
 
@@ -42,13 +42,13 @@ const print = (node: Component, indent = '', isPrevLast = true, isRoot = true) =
 const format = (node: Component) => {
   switch (node.type) {
     case 'HTML':
-      return cyan(node.name);
+      return chalk.cyan(node.name);
     case 'COMPONENT':
-      return yellow(node.name);
+      return chalk.yellow(node.name);
     case 'TEXT':
     case 'EXPRESSION':
     case 'CHILDREN_PLACEHOLDER':
-      return white(node.value);
+      return chalk.white(node.value);
     default:
       return 'ERROR';
   }

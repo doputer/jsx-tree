@@ -1,7 +1,6 @@
-import { analyzeFile } from '@/core/collector';
-import printTree from '@/core/console';
-import { buildHierarchy } from '@/core/parser';
-import { FilterOptions, Path } from '@/types';
+import { analyzeFile, buildHierarchy, FilterOptions, Path } from '@jsx-tree/core';
+
+import printTree from '@/lib/console';
 
 const analyzer = (entry: Path, options: FilterOptions = {}) => {
   const context = analyzeFile(entry);

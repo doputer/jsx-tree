@@ -1,0 +1,32 @@
+{
+  "name": "@jsx-tree/core",
+  "version": "0.1.0",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/doputer/jsx-tree"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Kim Dohyeon",
+    "email": "swputer@gmail.com"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/src/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rollup -c"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.27.0",
+    "@babel/traverse": "^7.27.0",
+    "@babel/types": "^7.27.0",
+    "@types/babel__traverse": "^7.20.7",
+    "enhanced-resolve": "^5.18.1",
+    "tsconfig-paths": "^4.2.0"
+  }
+}

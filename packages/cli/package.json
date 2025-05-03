@@ -1,0 +1,42 @@
+{
+  "name": "@jsx-tree/cli",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Analyze JSX files as a tree structure",
+  "keywords": [
+    "jsx",
+    "tsx",
+    "ast",
+    "tree",
+    "parser",
+    "analyzer"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/doputer/jsx-tree"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Kim Dohyeon",
+    "email": "swputer@gmail.com"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/src/index.d.ts",
+  "bin": {
+    "jsx-tree": "bin/cli.js"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rollup -c"
+  },
+  "dependencies": {
+    "@jsx-tree/core": "^0.1.0",
+    "chalk": "^4.1.2",
+    "commander": "^13.1.0"
+  }
+}
