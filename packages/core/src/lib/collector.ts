@@ -40,9 +40,7 @@ export const analyzeFile = (entry: Path) => {
       for (const importPath of importPaths) {
         traverseFile(importPath);
       }
-    } catch (error) {
-      console.log(error);
-
+    } catch {
       console.error('Failed to analyze', path);
     }
   };
