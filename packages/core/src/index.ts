@@ -1,3 +1,3 @@
-export * from '@/lib/collector';
-export * from '@/lib/parser';
+export { analyzeFile } from '@/lib/collector';
+export { buildHierarchy } from '@/lib/parser';
 export * from '@/types';

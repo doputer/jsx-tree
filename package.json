@@ -5,6 +5,10 @@
   "license": "MIT",
   "prettier": "./configs/prettier/index.js",
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.3",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-typescript": "^12.1.2",
     "@types/node": "^22.14.1",
     "@typescript-eslint/eslint-plugin": "^8.31.0",
     "@typescript-eslint/parser": "^8.31.0",
@@ -15,8 +19,7 @@
     "eslint-plugin-prettier": "^5.2.6",
     "prettier": "^3.5.3",
     "prettier-plugin-packagejson": "^2.5.10",
-    "ts-node": "^10.9.2",
-    "tsc-alias": "^1.8.15",
+    "rollup": "^4.40.1",
     "typescript": "^5.8.3"
   },
   "packageManager": "pnpm@10.10.0"
