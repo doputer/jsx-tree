@@ -53,7 +53,7 @@ program.action((entryArg, options) => {
     process.exit(1);
   }
 
-  require('../dist/core/analyzer.js').default(entry, options);
+  require('../dist/lib/analyzer.js').default(entry, options);
 });
 
 program.parse(process.argv);

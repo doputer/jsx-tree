@@ -2,7 +2,7 @@ import { basename, dirname } from 'node:path';
 
 import { cyan, white, yellow } from 'chalk';
 
-import type { Component, FilterOptions } from '@/types';
+import type { Component, FilterOptions } from '@jsx-tree/core';
 
 const log = console.log;
 
