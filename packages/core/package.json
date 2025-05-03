@@ -2,6 +2,15 @@
   "name": "@jsx-tree/core",
   "version": "0.1.1",
   "private": false,
+  "description": "Core library for JSX/TSX parsing and component tree generation",
+  "keywords": [
+    "jsx",
+    "tsx",
+    "ast",
+    "tree",
+    "parser",
+    "analyzer"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/doputer/jsx-tree"
