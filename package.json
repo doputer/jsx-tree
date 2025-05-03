@@ -30,6 +30,9 @@
     "bin",
     "README.md"
   ],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "build": "tsc && tsc-alias",
     "dev": "ts-node -r tsconfig-paths/register src/index.ts"
