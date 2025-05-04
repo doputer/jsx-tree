@@ -1,8 +1,8 @@
 /**
- * @see https://prettier.io/docs/en/configuration.html
+ * @see https://prettier.io/docs/configuration
  * @type {import("prettier").Config}
  */
-const defaults = {
+export default {
   semi: true,
   singleQuote: true,
   trailingComma: 'all',
@@ -12,5 +12,3 @@ const defaults = {
   arrowParens: 'avoid',
   plugins: ['prettier-plugin-packagejson'],
 };
-
-module.exports = defaults;

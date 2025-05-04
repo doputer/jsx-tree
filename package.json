@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "license": "MIT",
-  "prettier": "./configs/prettier/index.js",
+  "prettier": "./prettier.config.mjs",
   "devDependencies": {
     "@eslint/js": "^9.26.0",
     "@rollup/plugin-commonjs": "^28.0.3",
