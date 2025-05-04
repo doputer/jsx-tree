@@ -11,7 +11,8 @@
     "paths": {
       "@/*": [
         "./packages/core/src/*",
-        "./packages/cli/src/*"
+        "./packages/cli/src/*",
+        "./packages/viz/src/*"
       ]
     },
   },

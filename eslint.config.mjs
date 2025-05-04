@@ -2,6 +2,8 @@ import js from '@eslint/js';
 import { defineConfig } from 'eslint/config';
 import importPlugin from 'eslint-plugin-import';
 import prettierPlugin from 'eslint-plugin-prettier/recommended';
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
@@ -14,8 +16,7 @@ export default defineConfig([
   /* JavaScript */
   {
     files: ['**/*.{js,mjs}'],
-    plugins: { js },
-    extends: ['js/recommended'],
+    extends: [js.configs.recommended],
     languageOptions: { globals: globals.node },
   },
 
@@ -23,8 +24,26 @@ export default defineConfig([
   tseslint.configs.strict,
   tseslint.configs.stylistic,
   {
+    files: ['**/*.{ts,tsx}'],
     rules: {
       '@typescript-eslint/consistent-type-definitions': 'off',
+    },
+  },
+
+  /* React */
+  {
+    files: ['**/*.{ts,tsx}'],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+    },
+    plugins: {
+      'react-hooks': reactHooks,
+      'react-refresh': reactRefresh,
+    },
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     },
   },
 
