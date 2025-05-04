@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
 import { existsSync, readFileSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
 import chalk from 'chalk';
 import { program } from 'commander';
 
