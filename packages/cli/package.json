@@ -32,7 +32,8 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rollup -c"
+    "build": "rollup -c",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@jsx-tree/core": "^0.1.1",
